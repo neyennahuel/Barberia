@@ -1,0 +1,228 @@
+﻿<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Turnos | Barberia</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="site-header">
+        <div class="brand">
+          <span class="brand-mark">BT</span>
+          <div>
+            <p class="brand-name">BarberTurno</p>
+            <p class="brand-tag">Multi-peluqueria, multi-rol</p>
+          </div>
+        </div>
+        <nav class="site-nav">
+          <a href="#peluquerias">Peluquerias</a>
+          <a href="#roles">Roles</a>
+          <a href="#agenda">Agendar</a>
+          <a href="#app">App/Web</a>
+        </nav>
+        <button class="cta">Iniciar sesion</button>
+      </header>
+
+      <main>
+        <section class="hero">
+          <div class="hero-copy">
+            <p class="eyebrow">Turnos inteligentes para peluquerias</p>
+            <h1>
+              Reserva simple, ordenado por peluqueria y con visibilidad real para
+              cada rol.
+            </h1>
+            <p class="lead">
+              La plataforma conecta clientes, peluqueros y administradores en un
+              flujo unico: elegir peluqueria, elegir peluquero, agendar, y
+              confirmar. Pensado para web hoy y para app mañana.
+            </p>
+            <div class="hero-actions">
+              <button class="cta">Empezar a reservar</button>
+              <button class="ghost">Ver demo</button>
+            </div>
+            <div class="hero-badges">
+              <span>Multi-sucursal</span>
+              <span>Roles separados</span>
+              <span>Agenda en tiempo real</span>
+            </div>
+          </div>
+          <div class="hero-panel">
+            <div class="panel-card">
+              <p class="panel-title">Turno rapido</p>
+              <div class="panel-row">
+                <label for="hero-shop">Peluqueria</label>
+                <select id="hero-shop"></select>
+              </div>
+              <div class="panel-row">
+                <label for="hero-barber">Peluquero</label>
+                <select id="hero-barber"></select>
+              </div>
+              <div class="panel-row two">
+                <div>
+                  <label for="hero-date">Fecha</label>
+                  <input id="hero-date" type="date" />
+                </div>
+                <div>
+                  <label for="hero-time">Hora</label>
+                  <select id="hero-time"></select>
+                </div>
+              </div>
+              <button class="cta full">Confirmar turno</button>
+            </div>
+            <div class="panel-note">
+              <p>El peluquero recibe el turno y se refleja en su agenda.</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="peluquerias" class="section">
+          <div class="section-head">
+            <h2>Peluquerias disponibles</h2>
+            <p>
+              Una experiencia generica para multiples negocios. Cada peluqueria
+              administra su propio equipo y agenda.
+            </p>
+          </div>
+          <div class="cards" id="shop-grid"></div>
+        </section>
+
+        <section id="roles" class="section dark">
+          <div class="section-head">
+            <h2>Roles claros, permisos simples</h2>
+            <p>Cuatro perfiles con responsabilidades separadas.</p>
+          </div>
+          <div class="roles-grid">
+            <article class="role-card">
+              <h3>Administrador</h3>
+              <p>Gestion global, reportes, pagos y soporte.</p>
+              <ul>
+                <li>Alta de peluquerias</li>
+                <li>Control de planes</li>
+                <li>Visibilidad total</li>
+              </ul>
+            </article>
+            <article class="role-card">
+              <h3>Cliente</h3>
+              <p>Reserva y seguimiento del turno en un flujo corto.</p>
+              <ul>
+                <li>Seleccion de peluqueria</li>
+                <li>Eleccion de peluquero</li>
+                <li>Confirmacion rapida</li>
+              </ul>
+            </article>
+            <article class="role-card">
+              <h3>Peluquero</h3>
+              <p>Agenda visual con turnos en tiempo real.</p>
+              <ul>
+                <li>Vista del dia</li>
+                <li>Historial de clientes</li>
+                <li>Confirmaciones</li>
+              </ul>
+            </article>
+            <article class="role-card accent">
+              <h3>PeluqueroAdmin</h3>
+              <p>Administra solo su peluqueria.</p>
+              <ul>
+                <li>Alta/baja de peluqueros</li>
+                <li>Edicion de servicios</li>
+                <li>Reglas de horarios</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="section" id="agenda">
+          <div class="section-head">
+            <h2>Agenda en tres pasos</h2>
+            <p>El cliente toma su turno y el peluquero lo ve al instante.</p>
+          </div>
+          <div class="flow">
+            <div class="flow-step">
+              <span>01</span>
+              <h3>Elegi peluqueria</h3>
+              <p>Selecciona entre las peluquerias activas.</p>
+            </div>
+            <div class="flow-step">
+              <span>02</span>
+              <h3>Elegi peluquero</h3>
+              <p>Solo se muestran los horarios disponibles.</p>
+            </div>
+            <div class="flow-step">
+              <span>03</span>
+              <h3>Confirmacion</h3>
+              <p>El turno impacta en la agenda del peluquero.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="section booking" id="app">
+          <div class="booking-left">
+            <h2>Web ahora, app despues</h2>
+            <p>
+              El diseño es responsive y preparado para convertirlo en app sin
+              friccion. Los mismos flujos sirven para web y mobile.
+            </p>
+            <div class="device-grid">
+              <div class="device-card">
+                <p>Web</p>
+                <div class="device-screen"></div>
+              </div>
+              <div class="device-card">
+                <p>App</p>
+                <div class="device-screen phone"></div>
+              </div>
+            </div>
+          </div>
+          <div class="booking-panel">
+            <h3>Agendar turno</h3>
+            <form id="booking-form">
+              <label>
+                Peluqueria
+                <select id="booking-shop"></select>
+              </label>
+              <label>
+                Peluquero
+                <select id="booking-barber"></select>
+              </label>
+              <label>
+                Servicio
+                <select id="booking-service"></select>
+              </label>
+              <label>
+                Fecha
+                <input id="booking-date" type="date" />
+              </label>
+              <label>
+                Hora
+                <select id="booking-time"></select>
+              </label>
+              <button class="cta full" type="submit">Agendar</button>
+            </form>
+            <div class="agenda-preview">
+              <div>
+                <p class="muted">Agenda del peluquero</p>
+                <p id="agenda-name" class="agenda-name"></p>
+              </div>
+              <ul id="agenda-list"></ul>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <div>
+          <p class="brand-name">BarberTurno</p>
+          <p class="muted">Plataforma generica para peluquerias.</p>
+        </div>
+        <div class="footer-links">
+          <a href="#">Soporte</a>
+          <a href="#">Planes</a>
+          <a href="#">Contacto</a>
+        </div>
+      </footer>
+    </div>
+    <script src="app.js"></script>
+  </body>
+</html>
