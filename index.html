@@ -18,6 +18,7 @@
         </div>
         <nav class="site-nav">
           <a href="#peluquerias">Peluquerias</a>
+          <a href="#gestion">Gestion</a>
           <a href="#roles">Roles</a>
           <a href="#agenda">Agendar</a>
           <a href="#app">App/Web</a>
@@ -36,7 +37,7 @@
             <p class="lead">
               La plataforma conecta clientes, peluqueros y administradores en un
               flujo unico: elegir peluqueria, elegir peluquero, agendar, y
-              confirmar. Pensado para web hoy y para app mañana.
+              confirmar. Pensado para web hoy y para app manana.
             </p>
             <div class="hero-actions">
               <button class="cta">Empezar a reservar</button>
@@ -86,6 +87,67 @@
             </p>
           </div>
           <div class="cards" id="shop-grid"></div>
+        </section>
+
+        <section id="gestion" class="section management">
+          <div class="section-head">
+            <h2>Gestion basica</h2>
+            <p>
+              Crea usuarios y locales para dejar lista la estructura minima de
+              la app.
+            </p>
+          </div>
+          <div class="management-grid">
+            <div class="panel-card">
+              <h3>Crear usuario</h3>
+              <form id="user-form" class="form-grid">
+                <label>
+                  Nombre
+                  <input id="user-name" type="text" placeholder="Ej: Sofia" required />
+                </label>
+                <label>
+                  Rol
+                  <select id="user-role" required>
+                    <option value="admin">Administrador</option>
+                    <option value="cliente">Cliente</option>
+                    <option value="peluquero">Peluquero</option>
+                    <option value="peluqueroAdmin">PeluqueroAdmin</option>
+                  </select>
+                </label>
+                <label>
+                  Peluqueria (si aplica)
+                  <select id="user-shop"></select>
+                </label>
+                <button class="cta full" type="submit">Crear usuario</button>
+                <p id="user-message" class="form-message"></p>
+              </form>
+            </div>
+            <div class="panel-card">
+              <h3>Crear peluqueria</h3>
+              <form id="shop-form" class="form-grid">
+                <label>
+                  Nombre del local
+                  <input id="shop-name" type="text" placeholder="Ej: Estudio Norte" required />
+                </label>
+                <label>
+                  Direccion
+                  <input id="shop-address" type="text" placeholder="Ej: Calle 9 #550" required />
+                </label>
+                <button class="cta full" type="submit">Crear peluqueria</button>
+                <p id="shop-message" class="form-message"></p>
+              </form>
+            </div>
+          </div>
+          <div class="management-lists">
+            <div class="list-card">
+              <h4>Usuarios creados</h4>
+              <ul id="user-list"></ul>
+            </div>
+            <div class="list-card">
+              <h4>Locales creados</h4>
+              <ul id="shop-list"></ul>
+            </div>
+          </div>
         </section>
 
         <section id="roles" class="section dark">
@@ -161,7 +223,7 @@
           <div class="booking-left">
             <h2>Web ahora, app despues</h2>
             <p>
-              El diseño es responsive y preparado para convertirlo en app sin
+              El diseno es responsive y preparado para convertirlo en app sin
               friccion. Los mismos flujos sirven para web y mobile.
             </p>
             <div class="device-grid">
@@ -179,6 +241,10 @@
             <h3>Agendar turno</h3>
             <form id="booking-form">
               <label>
+                Cliente
+                <select id="booking-client"></select>
+              </label>
+              <label>
                 Peluqueria
                 <select id="booking-shop"></select>
               </label>
@@ -194,16 +260,18 @@
                 Fecha
                 <input id="booking-date" type="date" />
               </label>
-              <label>
-                Hora
-                <select id="booking-time"></select>
-              </label>
+              <div class="slot-section">
+                <p class="muted">Horarios disponibles</p>
+                <div id="booking-slots" class="slot-grid"></div>
+                <p id="booking-message" class="form-message"></p>
+              </div>
               <button class="cta full" type="submit">Agendar</button>
             </form>
             <div class="agenda-preview">
               <div>
                 <p class="muted">Agenda del peluquero</p>
                 <p id="agenda-name" class="agenda-name"></p>
+                <p id="agenda-date" class="muted"></p>
               </div>
               <ul id="agenda-list"></ul>
             </div>

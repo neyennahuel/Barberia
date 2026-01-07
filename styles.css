@@ -185,6 +185,10 @@ body {
   gap: 14px;
 }
 
+.panel-card h3 {
+  font-size: 1.2rem;
+}
+
 .panel-title {
   font-weight: 700;
 }
@@ -207,6 +211,7 @@ input {
   border-radius: 12px;
   border: 1px solid #dedede;
   font-family: inherit;
+  width: 100%;
 }
 
 .full {
@@ -272,6 +277,51 @@ input {
 .card span {
   font-size: 0.85rem;
   color: var(--ink-soft);
+}
+
+.management-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+}
+
+.form-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.form-grid label {
+  display: grid;
+  gap: 6px;
+  font-size: 0.92rem;
+}
+
+.form-message {
+  font-size: 0.85rem;
+  color: var(--accent-2);
+  min-height: 18px;
+}
+
+.management-lists {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+}
+
+.list-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+
+.list-card ul {
+  list-style: none;
+  margin-top: 12px;
+  display: grid;
+  gap: 8px;
+  color: var(--ink-soft);
+  font-size: 0.92rem;
 }
 
 .roles-grid {
@@ -343,6 +393,36 @@ input {
   display: grid;
   gap: 6px;
   font-size: 0.9rem;
+}
+
+.slot-section {
+  display: grid;
+  gap: 10px;
+}
+
+.slot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 10px;
+}
+
+.slot-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid #e1e1e1;
+  background: #fafafa;
+  font-size: 0.85rem;
+}
+
+.slot-option input {
+  accent-color: var(--accent);
+}
+
+.slot-option.is-disabled {
+  opacity: 0.5;
 }
 
 .agenda-preview {
