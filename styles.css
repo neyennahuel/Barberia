@@ -32,6 +32,7 @@ body {
   flex-direction: column;
   gap: 64px;
   position: relative;
+  z-index: 0;
 }
 
 .page::before,
@@ -41,6 +42,7 @@ body {
   border-radius: 999px;
   filter: blur(0px);
   opacity: 0.3;
+  z-index: -1;
 }
 
 .page::before {
