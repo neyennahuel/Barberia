@@ -1,76 +1,56 @@
-﻿const STORAGE_KEY = "barberia_state_v1";
-const DEFAULT_SLOTS = ["09:00", "10:30", "12:00", "14:00", "15:30", "17:00", "18:30"];
+const API = "";
+const USER_KEY = "barberia_user_v2";
 
-const defaultState = {
-  shops: [
-    {
-      id: "shop-1",
-      name: "Distrito 17",
-      address: "Av. Central 1240",
-      rating: "4.9",
-      services: ["Corte clasico", "Fade", "Barba premium"],
-      barbers: [
-        { id: "barber-1", name: "Lautaro", slots: ["09:00", "10:30", "12:00", "15:00"] },
-        { id: "barber-2", name: "Micaela", slots: ["11:00", "13:30", "17:00"] },
-      ],
-    },
-    {
-      id: "shop-2",
-      name: "Norte Studio",
-      address: "Calle 8 #110",
-      rating: "4.7",
-      services: ["Corte moderno", "Barba", "Perfilado"],
-      barbers: [
-        { id: "barber-3", name: "Santiago", slots: ["10:00", "11:30", "16:00"] },
-        { id: "barber-4", name: "Abril", slots: ["09:30", "12:30", "18:00"] },
-      ],
-    },
-    {
-      id: "shop-3",
-      name: "Barrio Sur",
-      address: "San Martin 300",
-      rating: "4.8",
-      services: ["Corte + barba", "Color", "Kids"],
-      barbers: [{ id: "barber-5", name: "Lucas", slots: ["08:30", "10:00", "14:30", "19:00"] }],
-    },
-    {
-      id: "shop-4",
-      name: "Vintage Club",
-      address: "Diagonal 50",
-      rating: "5.0",
-      services: ["Tijera", "Barba deluxe", "Masaje"],
-      barbers: [
-        { id: "barber-6", name: "Florencia", slots: ["09:00", "12:00", "15:30"] },
-        { id: "barber-7", name: "Ivan", slots: ["10:30", "13:00", "17:30"] },
-      ],
-    },
-  ],
-  users: [
-    { id: "user-1", name: "Camila", role: "cliente" },
-    { id: "user-2", name: "Nico", role: "cliente" },
-    { id: "admin-1", name: "Agus", role: "admin" },
-    { id: "barber-1", name: "Lautaro", role: "peluquero", shopId: "shop-1" },
-    { id: "barber-2", name: "Micaela", role: "peluquero", shopId: "shop-1" },
-    { id: "barber-3", name: "Santiago", role: "peluquero", shopId: "shop-2" },
-    { id: "barber-4", name: "Abril", role: "peluquero", shopId: "shop-2" },
-    { id: "barber-5", name: "Lucas", role: "peluquero", shopId: "shop-3" },
-    { id: "barber-6", name: "Florencia", role: "peluquero", shopId: "shop-4" },
-    { id: "barber-7", name: "Ivan", role: "peluquero", shopId: "shop-4" },
-    { id: "pa-1", name: "Romina", role: "peluqueroAdmin", shopId: "shop-2" },
-  ],
-  appointments: [],
-};
-
+const introSections = document.getElementById("intro-sections");
+const panelesSection = document.getElementById("paneles");
 const shopGrid = document.getElementById("shop-grid");
-const shopList = document.getElementById("shop-list");
-const userList = document.getElementById("user-list");
 
-const heroShop = document.getElementById("hero-shop");
-const heroBarber = document.getElementById("hero-barber");
-const heroTime = document.getElementById("hero-time");
-const heroDate = document.getElementById("hero-date");
+const clientPanel = document.getElementById("client-panel");
+const clientAppointmentsPanel = document.getElementById("client-appointments-panel");
+const clientAppointments = document.getElementById("client-appointments");
+const clientMessage = document.getElementById("client-message");
 
-const bookingClient = document.getElementById("booking-client");
+const barberPanel = document.getElementById("barber-panel");
+const barberHistoryPanel = document.getElementById("barber-history-panel");
+const barberDate = document.getElementById("barber-date");
+const barberAppointments = document.getElementById("barber-appointments");
+const barberMessage = document.getElementById("barber-message");
+const barberHistory = document.getElementById("barber-history");
+
+const ownerPanel = document.getElementById("owner-panel");
+const ownerHistoryPanel = document.getElementById("owner-history-panel");
+const ownerManagePanel = document.getElementById("owner-manage-panel");
+const ownerBarber = document.getElementById("owner-barber");
+const ownerDate = document.getElementById("owner-date");
+const ownerAppointments = document.getElementById("owner-appointments");
+const ownerMessage = document.getElementById("owner-message");
+const ownerHistory = document.getElementById("owner-history");
+const ownerUserShop = document.getElementById("owner-user-shop");
+const ownerCreateForm = document.getElementById("owner-create-form");
+const ownerUserName = document.getElementById("owner-user-name");
+const ownerUserUsername = document.getElementById("owner-user-username");
+const ownerUserPassword = document.getElementById("owner-user-password");
+const ownerConvertForm = document.getElementById("owner-convert-form");
+const ownerConvertUsername = document.getElementById("owner-convert-username");
+const ownerManageMessage = document.getElementById("owner-manage-message");
+
+const adminPanel = document.getElementById("admin-panel");
+const adminShopForm = document.getElementById("admin-shop-form");
+const adminShopName = document.getElementById("admin-shop-name");
+const adminShopAddress = document.getElementById("admin-shop-address");
+const adminUserForm = document.getElementById("admin-user-form");
+const adminUserName = document.getElementById("admin-user-name");
+const adminUserUsername = document.getElementById("admin-user-username");
+const adminUserPassword = document.getElementById("admin-user-password");
+const adminUserRole = document.getElementById("admin-user-role");
+const adminUserShop = document.getElementById("admin-user-shop");
+const adminConvertForm = document.getElementById("admin-convert-form");
+const adminConvertUsername = document.getElementById("admin-convert-username");
+const adminConvertShop = document.getElementById("admin-convert-shop");
+const adminStats = document.getElementById("admin-stats");
+const adminMessage = document.getElementById("admin-message");
+
+const bookingForm = document.getElementById("booking-form");
 const bookingShop = document.getElementById("booking-shop");
 const bookingBarber = document.getElementById("booking-barber");
 const bookingService = document.getElementById("booking-service");
@@ -78,68 +58,48 @@ const bookingDate = document.getElementById("booking-date");
 const bookingSlots = document.getElementById("booking-slots");
 const bookingMessage = document.getElementById("booking-message");
 
-const agendaName = document.getElementById("agenda-name");
-const agendaDate = document.getElementById("agenda-date");
-const agendaList = document.getElementById("agenda-list");
+const loginForm = document.getElementById("login-form");
+const loginUser = document.getElementById("login-user");
+const loginPass = document.getElementById("login-pass");
+const loginMessage = document.getElementById("login-message");
+const heroLogin = document.getElementById("hero-login");
+const heroLogout = document.getElementById("hero-logout");
+const sessionPill = document.getElementById("session-pill");
 
-const userForm = document.getElementById("user-form");
-const userName = document.getElementById("user-name");
-const userRole = document.getElementById("user-role");
-const userShop = document.getElementById("user-shop");
-const userMessage = document.getElementById("user-message");
-
-const shopForm = document.getElementById("shop-form");
-const shopName = document.getElementById("shop-name");
-const shopAddress = document.getElementById("shop-address");
-const shopMessage = document.getElementById("shop-message");
-
-const bookingForm = document.getElementById("booking-form");
-
+let currentUser = loadUser();
+let cachedShops = [];
 let selectedSlot = "";
-let state = loadState();
 
-function loadState() {
+function loadUser() {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) return structuredClone(defaultState);
-    return JSON.parse(stored);
+    const raw = localStorage.getItem(USER_KEY);
+    return raw ? JSON.parse(raw) : null;
   } catch (error) {
-    return structuredClone(defaultState);
+    return null;
   }
 }
 
-function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+function saveUser(user) {
+  if (!user) {
+    localStorage.removeItem(USER_KEY);
+  } else {
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+  }
 }
 
-function makeId(prefix) {
-  return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
+async function fetchJSON(url, options) {
+  const response = await fetch(`${API}${url}`, options);
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error || "Error de servidor");
+  }
+  return data;
 }
 
 function getTodayISO() {
   const now = new Date();
   const pad = (value) => String(value).padStart(2, "0");
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-}
-
-function isPastDate(dateStr) {
-  if (!dateStr) return false;
-  const today = getTodayISO();
-  return dateStr < today;
-}
-
-function timeToMinutes(timeStr) {
-  const [hours, minutes] = timeStr.split(":").map(Number);
-  return hours * 60 + minutes;
-}
-
-function isPastTimeForDate(dateStr, timeStr) {
-  if (!dateStr || !timeStr) return false;
-  const today = getTodayISO();
-  if (dateStr !== today) return false;
-  const now = new Date();
-  const nowMinutes = now.getHours() * 60 + now.getMinutes();
-  return timeToMinutes(timeStr) <= nowMinutes;
 }
 
 function setOptions(select, items, placeholder) {
@@ -160,233 +120,6 @@ function setOptions(select, items, placeholder) {
   });
 }
 
-function renderShopCards() {
-  shopGrid.innerHTML = "";
-  state.shops.forEach((shop) => {
-    const card = document.createElement("article");
-    card.className = "card";
-    card.innerHTML = `
-      <h3>${shop.name}</h3>
-      <span>${shop.address}</span>
-      <p>Rating ${shop.rating} | ${shop.barbers.length} peluqueros</p>
-    `;
-    shopGrid.appendChild(card);
-  });
-}
-
-function renderShopList() {
-  shopList.innerHTML = "";
-  state.shops.forEach((shop) => {
-    const li = document.createElement("li");
-    li.textContent = `${shop.name} | ${shop.address} | ${shop.barbers.length} peluqueros`;
-    shopList.appendChild(li);
-  });
-}
-
-function renderUserList() {
-  userList.innerHTML = "";
-  state.users.forEach((user) => {
-    const shop = state.shops.find((item) => item.id === user.shopId);
-    const shopLabel = shop ? ` | ${shop.name}` : "";
-    const li = document.createElement("li");
-    li.textContent = `${user.name} | ${user.role}${shopLabel}`;
-    userList.appendChild(li);
-  });
-}
-
-function renderShopSelects() {
-  const shopOptions = state.shops.map((shop) => ({
-    label: shop.name,
-    value: shop.id,
-  }));
-
-  setOptions(heroShop, shopOptions, "Selecciona una peluqueria");
-  setOptions(bookingShop, shopOptions, "Selecciona una peluqueria");
-  setOptions(userShop, shopOptions, "Sin asignar");
-
-  if (state.shops.length) {
-    heroShop.value = state.shops[0].id;
-    bookingShop.value = state.shops[0].id;
-  }
-}
-
-function renderClientSelect() {
-  const clients = state.users.filter((user) => user.role === "cliente");
-  const options = clients.map((client) => ({
-    label: client.name,
-    value: client.id,
-  }));
-  if (options.length) {
-    setOptions(bookingClient, options, "Selecciona cliente");
-  } else {
-    setOptions(bookingClient, [{ label: "Sin clientes", value: "" }]);
-  }
-}
-
-function renderBarberSelect(shop) {
-  const barberOptions = shop.barbers.map((barber) => ({
-    label: barber.name,
-    value: barber.id,
-  }));
-  if (barberOptions.length) {
-    setOptions(bookingBarber, barberOptions, "Selecciona peluquero");
-  } else {
-    setOptions(bookingBarber, [{ label: "Sin peluqueros", value: "" }]);
-  }
-}
-
-function renderServiceSelect(shop) {
-  const services = shop.services.length ? shop.services : ["Corte"];
-  const serviceOptions = services.map((service) => ({
-    label: service,
-    value: service,
-  }));
-  setOptions(bookingService, serviceOptions, "Selecciona servicio");
-}
-
-function renderHero(shop) {
-  const barberOptions = shop.barbers.map((barber) => ({
-    label: barber.name,
-    value: barber.id,
-  }));
-  setOptions(heroBarber, barberOptions, "Selecciona peluquero");
-  if (shop.barbers.length) {
-    heroBarber.value = shop.barbers[0].id;
-    setOptions(
-      heroTime,
-      shop.barbers[0].slots.map((slot) => ({ label: slot, value: slot })),
-      "Selecciona hora"
-    );
-  }
-}
-
-function getBookedTimes(barberId, dateStr) {
-  return state.appointments
-    .filter((appt) => appt.barberId === barberId && appt.date === dateStr)
-    .map((appt) => appt.time);
-}
-
-function renderSlots() {
-  bookingSlots.innerHTML = "";
-  bookingMessage.textContent = "";
-
-  const shop = state.shops.find((item) => item.id === bookingShop.value);
-  if (!shop) {
-    bookingMessage.textContent = "Crea una peluqueria para ver horarios.";
-    return;
-  }
-
-  const barber = shop.barbers.find((item) => item.id === bookingBarber.value);
-  if (!barber) {
-    bookingMessage.textContent = "No hay peluqueros disponibles.";
-    return;
-  }
-
-  const dateStr = bookingDate.value;
-  if (!dateStr) {
-    bookingMessage.textContent = "Selecciona una fecha para ver horarios.";
-    return;
-  }
-
-  if (isPastDate(dateStr)) {
-    bookingMessage.textContent = "No podes sacar turnos en fechas pasadas.";
-    return;
-  }
-
-  const bookedTimes = new Set(getBookedTimes(barber.id, dateStr));
-  const availableSlots = barber.slots.filter(
-    (slot) => !bookedTimes.has(slot) && !isPastTimeForDate(dateStr, slot)
-  );
-
-  if (!availableSlots.length) {
-    bookingMessage.textContent = "No hay horarios disponibles para esa fecha.";
-    return;
-  }
-
-  availableSlots.forEach((slot) => {
-    const label = document.createElement("label");
-    label.className = "slot-option";
-    const input = document.createElement("input");
-    input.type = "checkbox";
-    input.name = "slot";
-    input.value = slot;
-    input.checked = selectedSlot === slot;
-    input.addEventListener("change", () => {
-      selectedSlot = input.checked ? slot : "";
-      Array.from(bookingSlots.querySelectorAll("input")).forEach((checkbox) => {
-        if (checkbox !== input) checkbox.checked = false;
-      });
-    });
-    const text = document.createElement("span");
-    text.textContent = slot;
-    label.appendChild(input);
-    label.appendChild(text);
-    bookingSlots.appendChild(label);
-  });
-}
-
-function renderAgenda() {
-  agendaList.innerHTML = "";
-  const shop = state.shops.find((item) => item.id === bookingShop.value);
-  const barber = shop?.barbers.find((item) => item.id === bookingBarber.value);
-  const dateStr = bookingDate.value;
-
-  if (!shop || !barber) {
-    agendaName.textContent = "";
-    agendaDate.textContent = "";
-    return;
-  }
-
-  agendaName.textContent = barber.name;
-  agendaDate.textContent = dateStr ? `Fecha: ${dateStr}` : "Fecha: -";
-
-  if (!dateStr) {
-    const li = document.createElement("li");
-    li.textContent = "Selecciona fecha para ver la agenda.";
-    agendaList.appendChild(li);
-    return;
-  }
-
-  const bookedTimes = new Set(getBookedTimes(barber.id, dateStr));
-  barber.slots.forEach((slot) => {
-    const li = document.createElement("li");
-    if (bookedTimes.has(slot)) {
-      li.textContent = `${slot} | Reservado`;
-    } else if (isPastTimeForDate(dateStr, slot) || isPastDate(dateStr)) {
-      li.textContent = `${slot} | No disponible`;
-    } else {
-      li.textContent = `${slot} | Disponible`;
-    }
-    agendaList.appendChild(li);
-  });
-}
-
-function refreshBooking() {
-  const shop = state.shops.find((item) => item.id === bookingShop.value);
-  if (!shop) return;
-  renderBarberSelect(shop);
-  renderServiceSelect(shop);
-  selectedSlot = "";
-  renderSlots();
-  renderAgenda();
-}
-
-function refreshHero() {
-  const shop = state.shops.find((item) => item.id === heroShop.value);
-  if (!shop) return;
-  renderHero(shop);
-}
-
-function refreshAll() {
-  renderShopCards();
-  renderShopList();
-  renderUserList();
-  renderShopSelects();
-  renderClientSelect();
-  refreshHero();
-  refreshBooking();
-}
-
 function showMessage(element, text) {
   element.textContent = text;
   if (text) {
@@ -396,118 +129,373 @@ function showMessage(element, text) {
   }
 }
 
-heroShop.addEventListener("change", refreshHero);
-heroBarber.addEventListener("change", () => {
-  const shop = state.shops.find((item) => item.id === heroShop.value);
-  const barber = shop?.barbers.find((item) => item.id === heroBarber.value);
-  if (!barber) return;
-  setOptions(
-    heroTime,
-    barber.slots.map((slot) => ({ label: slot, value: slot })),
-    "Selecciona hora"
-  );
+function renderSession() {
+  heroLogout.classList.toggle("is-hidden", !currentUser);
+  heroLogin.classList.toggle("is-hidden", !!currentUser);
+
+  if (!currentUser) {
+    sessionPill.textContent = "Sin sesion";
+    introSections.classList.remove("is-hidden");
+    panelesSection.classList.add("is-hidden");
+    clientPanel.classList.add("is-hidden");
+    clientAppointmentsPanel.classList.add("is-hidden");
+    barberPanel.classList.add("is-hidden");
+    barberHistoryPanel.classList.add("is-hidden");
+    ownerPanel.classList.add("is-hidden");
+    ownerHistoryPanel.classList.add("is-hidden");
+    ownerManagePanel.classList.add("is-hidden");
+    adminPanel.classList.add("is-hidden");
+    return;
+  }
+
+  sessionPill.textContent = `${currentUser.name} | ${currentUser.role}`;
+  introSections.classList.add("is-hidden");
+  panelesSection.classList.remove("is-hidden");
+
+  const isCliente = currentUser.role === "cliente";
+  const isPeluquero = currentUser.role === "peluquero";
+  const isDueno = currentUser.role === "dueno";
+  const isAdmin = currentUser.role === "admin";
+
+  clientPanel.classList.toggle("is-hidden", !isCliente);
+  clientAppointmentsPanel.classList.toggle("is-hidden", !isCliente);
+  barberPanel.classList.toggle("is-hidden", !isPeluquero);
+  barberHistoryPanel.classList.toggle("is-hidden", !isPeluquero);
+  ownerPanel.classList.toggle("is-hidden", !isDueno);
+  ownerHistoryPanel.classList.toggle("is-hidden", !isDueno);
+  ownerManagePanel.classList.toggle("is-hidden", !isDueno);
+  adminPanel.classList.toggle("is-hidden", !isAdmin);
+
+  if (isDueno) {
+    const shop = cachedShops.find((item) => item.id === currentUser.shopId);
+    ownerUserShop.value = shop ? shop.name : "";
+  }
+}
+
+async function loadShops() {
+  cachedShops = await fetchJSON("/api/shops");
+  shopGrid.innerHTML = "";
+  cachedShops.forEach((shop) => {
+    const card = document.createElement("article");
+    card.className = "card";
+    card.innerHTML = `
+      <h3>${shop.name}</h3>
+      <span>${shop.address}</span>
+      <p>Agenda activa</p>
+    `;
+    shopGrid.appendChild(card);
+  });
+
+  const options = cachedShops.map((shop) => ({ label: shop.name, value: shop.id }));
+  setOptions(bookingShop, options, "Selecciona una peluqueria");
+  setOptions(adminUserShop, options, "Selecciona una peluqueria");
+  setOptions(adminConvertShop, options, "Selecciona una peluqueria");
+
+  if (options.length) {
+    bookingShop.value = options[0].value;
+  }
+  renderSession();
+  await refreshBooking();
+}
+
+async function loadBarbers(shopId, targetSelect) {
+  if (!shopId) {
+    setOptions(targetSelect, [], "Selecciona peluquero");
+    return [];
+  }
+  const barbers = await fetchJSON(`/api/barbers?shopId=${shopId}`);
+  const options = barbers.map((barber) => ({ label: barber.name, value: barber.id }));
+  setOptions(targetSelect, options, "Selecciona peluquero");
+  if (options.length) targetSelect.value = options[0].value;
+  return barbers;
+}
+
+async function loadServices(shopId) {
+  if (!shopId) {
+    setOptions(bookingService, [], "Selecciona servicio");
+    return;
+  }
+  const services = await fetchJSON(`/api/services?shopId=${shopId}`);
+  const options = services.map((service) => ({ label: service, value: service }));
+  setOptions(bookingService, options, "Selecciona servicio");
+}
+
+async function renderSlots() {
+  bookingSlots.innerHTML = "";
+  bookingMessage.textContent = "";
+  selectedSlot = "";
+
+  const shopId = bookingShop.value;
+  const barberId = bookingBarber.value;
+  const date = bookingDate.value;
+
+  if (!shopId || !barberId || !date) {
+    bookingMessage.textContent = "Completa peluqueria, peluquero y fecha.";
+    return;
+  }
+
+  try {
+    const availability = await fetchJSON(
+      `/api/availability?barberId=${barberId}&date=${date}`
+    );
+    if (!availability.slots.length) {
+      bookingMessage.textContent = availability.reason || "Sin horarios.";
+      return;
+    }
+
+    availability.slots.forEach((slot) => {
+      const label = document.createElement("label");
+      label.className = "slot-option";
+      const input = document.createElement("input");
+      input.type = "checkbox";
+      input.value = slot;
+      input.addEventListener("change", () => {
+        selectedSlot = input.checked ? slot : "";
+        Array.from(bookingSlots.querySelectorAll("input")).forEach((checkbox) => {
+          if (checkbox !== input) checkbox.checked = false;
+        });
+      });
+      const text = document.createElement("span");
+      text.textContent = slot;
+      label.appendChild(input);
+      label.appendChild(text);
+      bookingSlots.appendChild(label);
+    });
+  } catch (error) {
+    bookingMessage.textContent = error.message;
+  }
+}
+
+async function refreshBooking() {
+  if (!currentUser || currentUser.role !== "cliente") return;
+  const shopId = bookingShop.value;
+  await loadBarbers(shopId, bookingBarber);
+  await loadServices(shopId);
+  await renderSlots();
+}
+
+async function loadClientAppointments() {
+  if (!currentUser || currentUser.role !== "cliente") return;
+  clientAppointments.innerHTML = "";
+  clientMessage.textContent = "";
+
+  try {
+    const rows = await fetchJSON(
+      `/api/appointments/client?clientId=${currentUser.id}`
+    );
+    if (!rows.length) {
+      const li = document.createElement("li");
+      li.textContent = "No tenes turnos agendados.";
+      clientAppointments.appendChild(li);
+      return;
+    }
+
+    rows.forEach((row) => {
+      const li = document.createElement("li");
+      li.textContent = `${row.date} ${row.time} | ${row.shop} | ${row.barber}`;
+      clientAppointments.appendChild(li);
+    });
+  } catch (error) {
+    clientMessage.textContent = error.message;
+  }
+}
+
+async function refreshBarberAgenda() {
+  barberAppointments.innerHTML = "";
+  barberMessage.textContent = "";
+
+  if (!currentUser || currentUser.role !== "peluquero") return;
+
+  const date = barberDate.value;
+  if (!date) {
+    barberMessage.textContent = "Selecciona una fecha.";
+    return;
+  }
+
+  try {
+    const rows = await fetchJSON(
+      `/api/appointments?barberId=${currentUser.barberId}&date=${date}`
+    );
+    if (!rows.length) {
+      const li = document.createElement("li");
+      li.textContent = "Sin turnos agendados.";
+      barberAppointments.appendChild(li);
+      return;
+    }
+
+    rows.forEach((row) => {
+      const li = document.createElement("li");
+      const text = document.createElement("span");
+      text.textContent = `${row.time} | ${row.client} | ${row.service}`;
+      const button = document.createElement("button");
+      button.textContent = "Cancelar";
+      button.addEventListener("click", () => cancelAppointment(row.id, barberMessage));
+      li.appendChild(text);
+      li.appendChild(button);
+      barberAppointments.appendChild(li);
+    });
+  } catch (error) {
+    barberMessage.textContent = error.message;
+  }
+}
+
+async function refreshBarberHistory(barberId, targetList) {
+  targetList.innerHTML = "";
+  if (!barberId) return;
+
+  try {
+    const rows = await fetchJSON(`/api/history/barber?barberId=${barberId}`);
+    if (!rows.length) {
+      const li = document.createElement("li");
+      li.textContent = "Sin historial cargado.";
+      targetList.appendChild(li);
+      return;
+    }
+    rows.forEach((row) => {
+      const li = document.createElement("li");
+      li.textContent = `${row.month} | ${row.total} cortes`;
+      targetList.appendChild(li);
+    });
+  } catch (error) {
+    const li = document.createElement("li");
+    li.textContent = error.message;
+    targetList.appendChild(li);
+  }
+}
+
+async function refreshOwnerAgenda() {
+  ownerAppointments.innerHTML = "";
+  ownerMessage.textContent = "";
+
+  if (!currentUser || currentUser.role !== "dueno") return;
+
+  const date = ownerDate.value;
+  const barberId = ownerBarber.value;
+  if (!date || !barberId) {
+    ownerMessage.textContent = "Selecciona peluquero y fecha.";
+    return;
+  }
+
+  try {
+    const rows = await fetchJSON(
+      `/api/appointments?barberId=${barberId}&date=${date}`
+    );
+    if (!rows.length) {
+      const li = document.createElement("li");
+      li.textContent = "Sin turnos agendados.";
+      ownerAppointments.appendChild(li);
+      return;
+    }
+
+    rows.forEach((row) => {
+      const li = document.createElement("li");
+      const text = document.createElement("span");
+      text.textContent = `${row.time} | ${row.client} | ${row.service}`;
+      const button = document.createElement("button");
+      button.textContent = "Cancelar";
+      button.addEventListener("click", () => cancelAppointment(row.id, ownerMessage));
+      li.appendChild(text);
+      li.appendChild(button);
+      ownerAppointments.appendChild(li);
+    });
+  } catch (error) {
+    ownerMessage.textContent = error.message;
+  }
+}
+
+async function cancelAppointment(appointmentId, messageEl) {
+  if (!appointmentId || !currentUser) return;
+  try {
+    await fetchJSON(`/api/appointments/${appointmentId}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ actorId: currentUser.id }),
+    });
+    showMessage(messageEl, "Turno cancelado.");
+    if (currentUser.role === "peluquero") {
+      refreshBarberAgenda();
+    }
+    if (currentUser.role === "dueno") {
+      refreshOwnerAgenda();
+    }
+    if (currentUser.role === "cliente") {
+      loadClientAppointments();
+    }
+  } catch (error) {
+    showMessage(messageEl, error.message);
+  }
+}
+
+async function loadAdminStats() {
+  if (!currentUser || currentUser.role !== "admin") return;
+  try {
+    const stats = await fetchJSON("/api/stats/appointments");
+    adminStats.textContent = stats.total ?? 0;
+  } catch (error) {
+    adminStats.textContent = "0";
+  }
+}
+
+loginForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  loginMessage.textContent = "";
+
+  try {
+    const user = await fetchJSON("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: loginUser.value.trim(),
+        password: loginPass.value.trim(),
+      }),
+    });
+
+    currentUser = user;
+    saveUser(user);
+    renderSession();
+
+    if (currentUser.role === "cliente") {
+      await refreshBooking();
+      await loadClientAppointments();
+    }
+    if (currentUser.role === "peluquero") {
+      await refreshBarberAgenda();
+      await refreshBarberHistory(currentUser.barberId, barberHistory);
+    }
+    if (currentUser.role === "dueno") {
+      await loadBarbers(currentUser.shopId, ownerBarber);
+      await refreshOwnerAgenda();
+      await refreshBarberHistory(ownerBarber.value, ownerHistory);
+    }
+    if (currentUser.role === "admin") {
+      await loadAdminStats();
+    }
+    loginForm.reset();
+  } catch (error) {
+    loginMessage.textContent = error.message;
+  }
+});
+
+heroLogin.addEventListener("click", () => {
+  loginUser.focus();
+});
+
+heroLogout.addEventListener("click", () => {
+  currentUser = null;
+  saveUser(null);
+  renderSession();
 });
 
 bookingShop.addEventListener("change", refreshBooking);
-bookingBarber.addEventListener("change", () => {
-  selectedSlot = "";
-  renderSlots();
-  renderAgenda();
-});
-bookingDate.addEventListener("change", () => {
-  selectedSlot = "";
-  renderSlots();
-  renderAgenda();
-});
+bookingBarber.addEventListener("change", renderSlots);
+bookingDate.addEventListener("change", renderSlots);
 
-userForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-  const name = userName.value.trim();
-  const role = userRole.value;
-  const shopId = userShop.value || null;
-
-  if (!name) return;
-
-  const needsShop = role === "peluquero" || role === "peluqueroAdmin";
-  if (needsShop && !shopId) {
-    showMessage(userMessage, "Selecciona una peluqueria para ese rol.");
-    return;
-  }
-
-  const id = needsShop ? makeId("barber") : makeId("user");
-  state.users.push({ id, name, role, shopId: needsShop ? shopId : null });
-
-  if (needsShop) {
-    const shop = state.shops.find((item) => item.id === shopId);
-    if (shop) {
-      shop.barbers.push({ id, name, slots: [...DEFAULT_SLOTS] });
-    }
-  }
-
-  saveState();
-  userForm.reset();
-  renderUserList();
-  renderShopCards();
-  renderShopList();
-  renderShopSelects();
-  renderClientSelect();
-  refreshBooking();
-  showMessage(userMessage, "Usuario creado.");
-});
-
-shopForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-  const name = shopName.value.trim();
-  const address = shopAddress.value.trim();
-
-  if (!name || !address) return;
-
-  const newShop = {
-    id: makeId("shop"),
-    name,
-    address,
-    rating: "-",
-    services: ["Corte", "Barba", "Corte + barba"],
-    barbers: [],
-  };
-
-  state.shops.push(newShop);
-  saveState();
-  shopForm.reset();
-  renderShopCards();
-  renderShopList();
-  renderShopSelects();
-  refreshBooking();
-  showMessage(shopMessage, "Peluqueria creada.");
-});
-
-bookingForm.addEventListener("submit", (event) => {
+bookingForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   bookingMessage.textContent = "";
 
-  const clientId = bookingClient.value;
-  const shop = state.shops.find((item) => item.id === bookingShop.value);
-  const barber = shop?.barbers.find((item) => item.id === bookingBarber.value);
-  const dateStr = bookingDate.value;
-  const service = bookingService.value;
-
-  if (!clientId) {
-    bookingMessage.textContent = "Selecciona un cliente.";
-    return;
-  }
-
-  if (!shop || !barber) {
-    bookingMessage.textContent = "Completa peluqueria y peluquero.";
-    return;
-  }
-
-  if (!dateStr) {
-    bookingMessage.textContent = "Selecciona una fecha valida.";
-    return;
-  }
-
-  if (isPastDate(dateStr)) {
-    bookingMessage.textContent = "No podes sacar turnos en fechas pasadas.";
+  if (!currentUser || currentUser.role !== "cliente") {
+    bookingMessage.textContent = "Inicia sesion como cliente.";
     return;
   }
 
@@ -516,34 +504,215 @@ bookingForm.addEventListener("submit", (event) => {
     return;
   }
 
-  if (isPastTimeForDate(dateStr, selectedSlot)) {
-    bookingMessage.textContent = "Ese horario ya paso.";
-    return;
+  try {
+    await fetchJSON("/api/appointments", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        clientId: currentUser.id,
+        shopId: bookingShop.value,
+        barberId: bookingBarber.value,
+        date: bookingDate.value,
+        time: selectedSlot,
+        service: bookingService.value,
+      }),
+    });
+
+    selectedSlot = "";
+    bookingForm.reset();
+    bookingDate.value = getTodayISO();
+    await refreshBooking();
+    bookingMessage.textContent = "Turno reservado.";
+    await loadClientAppointments();
+  } catch (error) {
+    bookingMessage.textContent = error.message;
   }
+});
 
-  state.appointments.push({
-    id: makeId("appt"),
-    shopId: shop.id,
-    barberId: barber.id,
-    clientId,
-    date: dateStr,
-    time: selectedSlot,
-    service,
-  });
+barberDate.addEventListener("change", refreshBarberAgenda);
+ownerDate.addEventListener("change", refreshOwnerAgenda);
+ownerBarber.addEventListener("change", async () => {
+  await refreshOwnerAgenda();
+  await refreshBarberHistory(ownerBarber.value, ownerHistory);
+});
 
-  saveState();
-  selectedSlot = "";
-  renderSlots();
-  renderAgenda();
-  bookingForm.reset();
-  renderShopSelects();
-  renderClientSelect();
-  refreshBooking();
-  bookingMessage.textContent = "Turno reservado.";
+adminShopForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!currentUser || currentUser.role !== "admin") return;
+  adminMessage.textContent = "";
+
+  try {
+    if (!adminShopName.value.trim() || !adminShopAddress.value.trim()) {
+      showMessage(adminMessage, "Completa nombre y direccion.");
+      return;
+    }
+    await fetchJSON("/api/shops", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        actorId: currentUser.id,
+        name: adminShopName.value.trim(),
+        address: adminShopAddress.value.trim(),
+      }),
+    });
+
+    adminShopForm.reset();
+    await loadShops();
+    showMessage(adminMessage, "Peluqueria creada.");
+  } catch (error) {
+    showMessage(adminMessage, error.message);
+  }
+});
+
+adminUserForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!currentUser || currentUser.role !== "admin") return;
+  adminMessage.textContent = "";
+
+  try {
+    if (
+      !adminUserName.value.trim() ||
+      !adminUserUsername.value.trim() ||
+      !adminUserPassword.value.trim()
+    ) {
+      showMessage(adminMessage, "Completa nombre, usuario y clave.");
+      return;
+    }
+    await fetchJSON("/api/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        actorId: currentUser.id,
+        name: adminUserName.value.trim(),
+        username: adminUserUsername.value.trim(),
+        password: adminUserPassword.value.trim(),
+        role: adminUserRole.value,
+        shopId: adminUserShop.value || null,
+      }),
+    });
+
+    adminUserForm.reset();
+    showMessage(adminMessage, "Usuario creado.");
+  } catch (error) {
+    showMessage(adminMessage, error.message);
+  }
+});
+
+adminConvertForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!currentUser || currentUser.role !== "admin") return;
+  adminMessage.textContent = "";
+
+  try {
+    if (!adminConvertUsername.value.trim() || !adminConvertShop.value) {
+      showMessage(adminMessage, "Completa usuario y peluqueria.");
+      return;
+    }
+    await fetchJSON("/api/users/convert", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        actorId: currentUser.id,
+        username: adminConvertUsername.value.trim(),
+        shopId: adminConvertShop.value,
+      }),
+    });
+
+    adminConvertForm.reset();
+    showMessage(adminMessage, "Usuario convertido a peluquero.");
+  } catch (error) {
+    showMessage(adminMessage, error.message);
+  }
+});
+
+ownerCreateForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!currentUser || currentUser.role !== "dueno") return;
+  ownerManageMessage.textContent = "";
+
+  try {
+    if (
+      !ownerUserName.value.trim() ||
+      !ownerUserUsername.value.trim() ||
+      !ownerUserPassword.value.trim()
+    ) {
+      showMessage(ownerManageMessage, "Completa nombre, usuario y clave.");
+      return;
+    }
+    await fetchJSON("/api/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        actorId: currentUser.id,
+        name: ownerUserName.value.trim(),
+        username: ownerUserUsername.value.trim(),
+        password: ownerUserPassword.value.trim(),
+        role: "peluquero",
+        shopId: currentUser.shopId,
+      }),
+    });
+
+    ownerCreateForm.reset();
+    showMessage(ownerManageMessage, "Peluquero creado.");
+    await loadBarbers(currentUser.shopId, ownerBarber);
+  } catch (error) {
+    showMessage(ownerManageMessage, error.message);
+  }
+});
+
+ownerConvertForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!currentUser || currentUser.role !== "dueno") return;
+  ownerManageMessage.textContent = "";
+
+  try {
+    if (!ownerConvertUsername.value.trim()) {
+      showMessage(ownerManageMessage, "Completa el usuario.");
+      return;
+    }
+    await fetchJSON("/api/users/convert", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        actorId: currentUser.id,
+        username: ownerConvertUsername.value.trim(),
+        shopId: currentUser.shopId,
+      }),
+    });
+
+    ownerConvertForm.reset();
+    showMessage(ownerManageMessage, "Usuario convertido a peluquero.");
+    await loadBarbers(currentUser.shopId, ownerBarber);
+  } catch (error) {
+    showMessage(ownerManageMessage, error.message);
+  }
 });
 
 const today = getTodayISO();
 bookingDate.min = today;
-heroDate.min = today;
+bookingDate.value = today;
+barberDate.min = today;
+barberDate.value = today;
+ownerDate.min = today;
+ownerDate.value = today;
 
-refreshAll();
+renderSession();
+loadShops().catch(() => {
+  bookingMessage.textContent = "No se pudo conectar con el servidor.";
+});
+if (currentUser?.role === "peluquero") {
+  refreshBarberAgenda();
+  refreshBarberHistory(currentUser.barberId, barberHistory);
+}
+if (currentUser?.role === "cliente") {
+  loadClientAppointments();
+}
+if (currentUser?.role === "dueno") {
+  loadBarbers(currentUser.shopId, ownerBarber).then(() => {
+    refreshOwnerAgenda();
+    refreshBarberHistory(ownerBarber.value, ownerHistory);
+  });
+}
+if (currentUser?.role === "admin") {
+  loadAdminStats();
+}

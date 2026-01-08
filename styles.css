@@ -104,6 +104,14 @@ body {
   color: var(--ink-soft);
 }
 
+.session-pill {
+  background: #111;
+  color: #fff;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 0.85rem;
+}
+
 .cta,
 .ghost {
   border: none;
@@ -185,37 +193,19 @@ body {
   gap: 14px;
 }
 
-.panel-card h3 {
-  font-size: 1.2rem;
-}
-
 .panel-title {
   font-weight: 700;
 }
 
-.panel-row {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+.demo-keys {
+  background: #f7f5f1;
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-size: 0.85rem;
 }
 
-.panel-row.two {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-select,
-input {
-  padding: 10px 12px;
-  border-radius: 12px;
-  border: 1px solid #dedede;
-  font-family: inherit;
-  width: 100%;
-}
-
-.full {
-  width: 100%;
+.demo-keys p {
+  margin-bottom: 6px;
 }
 
 .panel-note {
@@ -241,6 +231,18 @@ input {
 
 .section-head h2 {
   font-size: clamp(1.8rem, 3vw, 2.6rem);
+}
+
+.panels {
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: var(--radius);
+  padding: 32px;
+}
+
+.panel-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
 }
 
 .cards {
@@ -277,51 +279,6 @@ input {
 .card span {
   font-size: 0.85rem;
   color: var(--ink-soft);
-}
-
-.management-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 18px;
-}
-
-.form-grid {
-  display: grid;
-  gap: 12px;
-}
-
-.form-grid label {
-  display: grid;
-  gap: 6px;
-  font-size: 0.92rem;
-}
-
-.form-message {
-  font-size: 0.85rem;
-  color: var(--accent-2);
-  min-height: 18px;
-}
-
-.management-lists {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 18px;
-}
-
-.list-card {
-  background: var(--card);
-  border-radius: var(--radius);
-  padding: 20px;
-  box-shadow: var(--shadow);
-}
-
-.list-card ul {
-  list-style: none;
-  margin-top: 12px;
-  display: grid;
-  gap: 8px;
-  color: var(--ink-soft);
-  font-size: 0.92rem;
 }
 
 .roles-grid {
@@ -384,15 +341,30 @@ input {
   gap: 18px;
 }
 
-.booking-panel form {
+.booking-panel form,
+.form-grid {
   display: grid;
   gap: 12px;
 }
 
-.booking-panel label {
+.booking-panel label,
+.form-grid label {
   display: grid;
   gap: 6px;
   font-size: 0.9rem;
+}
+
+select,
+input {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid #dedede;
+  font-family: inherit;
+  width: 100%;
+}
+
+.full {
+  width: 100%;
 }
 
 .slot-section {
@@ -421,8 +393,43 @@ input {
   accent-color: var(--accent);
 }
 
-.slot-option.is-disabled {
-  opacity: 0.5;
+.list {
+  list-style: none;
+  display: grid;
+  gap: 10px;
+  color: var(--ink-soft);
+}
+
+.list li {
+  background: #fff6ee;
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.list button {
+  border: none;
+  background: #111;
+  color: #fff;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.stats-card {
+  background: #fdf7f0;
+  border-radius: 16px;
+  padding: 12px;
+}
+
+.stats-total {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--ink);
 }
 
 .agenda-preview {
@@ -444,10 +451,6 @@ input {
   padding: 8px 10px;
   border-radius: 10px;
   font-size: 0.85rem;
-}
-
-.agenda-name {
-  font-weight: 700;
 }
 
 .device-grid {
@@ -495,9 +498,19 @@ input {
   color: inherit;
 }
 
+.form-message {
+  font-size: 0.85rem;
+  color: var(--accent-2);
+  min-height: 18px;
+}
+
 .muted {
   color: #bdbdbd;
   font-size: 0.9rem;
+}
+
+.is-hidden {
+  display: none;
 }
 
 @keyframes rise {

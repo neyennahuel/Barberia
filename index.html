@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="es">
   <head>
     <meta charset="utf-8" />
@@ -18,262 +18,318 @@
         </div>
         <nav class="site-nav">
           <a href="#peluquerias">Peluquerias</a>
-          <a href="#gestion">Gestion</a>
           <a href="#roles">Roles</a>
           <a href="#agenda">Agendar</a>
-          <a href="#app">App/Web</a>
+          <a href="#paneles">Panel</a>
         </nav>
-        <button class="cta">Iniciar sesion</button>
+        <div class="session-pill" id="session-pill">Sin sesion</div>
       </header>
 
       <main>
-        <section class="hero">
-          <div class="hero-copy">
-            <p class="eyebrow">Turnos inteligentes para peluquerias</p>
-            <h1>
-              Reserva simple, ordenado por peluqueria y con visibilidad real para
-              cada rol.
-            </h1>
-            <p class="lead">
-              La plataforma conecta clientes, peluqueros y administradores en un
-              flujo unico: elegir peluqueria, elegir peluquero, agendar, y
-              confirmar. Pensado para web hoy y para app manana.
-            </p>
-            <div class="hero-actions">
-              <button class="cta">Empezar a reservar</button>
-              <button class="ghost">Ver demo</button>
-            </div>
-            <div class="hero-badges">
-              <span>Multi-sucursal</span>
-              <span>Roles separados</span>
-              <span>Agenda en tiempo real</span>
-            </div>
-          </div>
-          <div class="hero-panel">
-            <div class="panel-card">
-              <p class="panel-title">Turno rapido</p>
-              <div class="panel-row">
-                <label for="hero-shop">Peluqueria</label>
-                <select id="hero-shop"></select>
+        <div id="intro-sections">
+          <section class="hero">
+            <div class="hero-copy">
+              <p class="eyebrow">Turnos inteligentes para peluquerias</p>
+              <h1>
+                Reserva simple, ordenado por peluqueria y con visibilidad real para
+                cada rol.
+              </h1>
+              <p class="lead">
+                La plataforma conecta clientes, peluqueros y administradores en un
+                flujo unico: elegir peluqueria, elegir peluquero, agendar, y
+                confirmar. Pensado para web hoy y para app manana.
+              </p>
+              <div class="hero-actions">
+                <button class="cta" id="hero-login">Acceder</button>
+                <button class="ghost" id="hero-logout">Cerrar sesion</button>
               </div>
-              <div class="panel-row">
-                <label for="hero-barber">Peluquero</label>
-                <select id="hero-barber"></select>
+              <div class="hero-badges">
+                <span>Multi-sucursal</span>
+                <span>Roles separados</span>
+                <span>Agenda en tiempo real</span>
               </div>
-              <div class="panel-row two">
-                <div>
-                  <label for="hero-date">Fecha</label>
-                  <input id="hero-date" type="date" />
+            </div>
+            <div class="hero-panel">
+              <div class="panel-card">
+                <p class="panel-title">Acceso demo</p>
+                <form id="login-form" class="form-grid">
+                  <label>
+                    Usuario
+                    <input id="login-user" type="text" placeholder="admin" required />
+                  </label>
+                  <label>
+                    Clave
+                    <input id="login-pass" type="password" placeholder="admin123" required />
+                  </label>
+                  <button class="cta full" type="submit">Iniciar sesion</button>
+                  <p id="login-message" class="form-message"></p>
+                </form>
+                <div class="demo-keys">
+                  <p>Credenciales demo:</p>
+                  <p><strong>admin</strong> / admin123</p>
+                  <p><strong>dueno</strong> / dueno123</p>
+                  <p><strong>peluquero</strong> / pelu123</p>
+                  <p><strong>cliente</strong> / cliente123</p>
                 </div>
-                <div>
-                  <label for="hero-time">Hora</label>
-                  <select id="hero-time"></select>
-                </div>
               </div>
-              <button class="cta full">Confirmar turno</button>
+              <div class="panel-note">
+                <p>El peluquero ve al instante los turnos agendados.</p>
+              </div>
             </div>
-            <div class="panel-note">
-              <p>El peluquero recibe el turno y se refleja en su agenda.</p>
+          </section>
+
+          <section id="peluquerias" class="section">
+            <div class="section-head">
+              <h2>Peluquerias disponibles</h2>
+              <p>
+                Una experiencia generica para multiples negocios. Cada peluqueria
+                administra su propio equipo y agenda.
+              </p>
             </div>
-          </div>
-        </section>
+            <div class="cards" id="shop-grid"></div>
+          </section>
 
-        <section id="peluquerias" class="section">
-          <div class="section-head">
-            <h2>Peluquerias disponibles</h2>
-            <p>
-              Una experiencia generica para multiples negocios. Cada peluqueria
-              administra su propio equipo y agenda.
-            </p>
-          </div>
-          <div class="cards" id="shop-grid"></div>
-        </section>
+          <section id="roles" class="section dark">
+            <div class="section-head">
+              <h2>Roles claros, permisos simples</h2>
+              <p>Cuatro perfiles con responsabilidades separadas.</p>
+            </div>
+            <div class="roles-grid">
+              <article class="role-card">
+                <h3>Administrador</h3>
+                <p>Gestion global, reportes, pagos y soporte.</p>
+                <ul>
+                  <li>Alta de peluquerias</li>
+                  <li>Control de planes</li>
+                  <li>Visibilidad total</li>
+                </ul>
+              </article>
+              <article class="role-card">
+                <h3>Cliente</h3>
+                <p>Reserva y seguimiento del turno en un flujo corto.</p>
+                <ul>
+                  <li>Seleccion de peluqueria</li>
+                  <li>Eleccion de peluquero</li>
+                  <li>Confirmacion rapida</li>
+                </ul>
+              </article>
+              <article class="role-card">
+                <h3>Peluquero</h3>
+                <p>Agenda visual con turnos en tiempo real.</p>
+                <ul>
+                  <li>Vista del dia</li>
+                  <li>Historial de clientes</li>
+                  <li>Confirmaciones</li>
+                </ul>
+              </article>
+              <article class="role-card accent">
+                <h3>Dueno</h3>
+                <p>Administra su propia peluqueria.</p>
+                <ul>
+                  <li>Alta de peluqueros</li>
+                  <li>Gestion del equipo</li>
+                  <li>Visibilidad por local</li>
+                </ul>
+              </article>
+            </div>
+          </section>
 
-        <section id="gestion" class="section management">
+          <section class="section" id="agenda">
+            <div class="section-head">
+              <h2>Agenda en tres pasos</h2>
+              <p>El cliente toma su turno y el peluquero lo ve al instante.</p>
+            </div>
+            <div class="flow">
+              <div class="flow-step">
+                <span>01</span>
+                <h3>Elegi peluqueria</h3>
+                <p>Selecciona entre las peluquerias activas.</p>
+              </div>
+              <div class="flow-step">
+                <span>02</span>
+                <h3>Elegi peluquero</h3>
+                <p>Solo se muestran los horarios disponibles.</p>
+              </div>
+              <div class="flow-step">
+                <span>03</span>
+                <h3>Confirmacion</h3>
+                <p>El turno impacta en la agenda del peluquero.</p>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <section class="section panels is-hidden" id="paneles">
           <div class="section-head">
-            <h2>Gestion basica</h2>
-            <p>
-              Crea usuarios y locales para dejar lista la estructura minima de
-              la app.
-            </p>
+            <h2>Panel de usuario</h2>
+            <p>La vista se ajusta segun el rol.</p>
           </div>
-          <div class="management-grid">
-            <div class="panel-card">
-              <h3>Crear usuario</h3>
-              <form id="user-form" class="form-grid">
+          <div class="panel-grid">
+            <div class="panel-card is-hidden" id="client-panel">
+              <h3>Solicitar turno</h3>
+              <form id="booking-form" class="form-grid">
+                <label>
+                  Peluqueria
+                  <select id="booking-shop"></select>
+                </label>
+                <label>
+                  Peluquero
+                  <select id="booking-barber"></select>
+                </label>
+                <label>
+                  Servicio
+                  <select id="booking-service"></select>
+                </label>
+                <label>
+                  Fecha
+                  <input id="booking-date" type="date" />
+                </label>
+                <div class="slot-section">
+                  <p class="muted">Horarios disponibles</p>
+                  <div id="booking-slots" class="slot-grid"></div>
+                  <p id="booking-message" class="form-message"></p>
+                </div>
+                <button class="cta full" type="submit">Agendar</button>
+              </form>
+            </div>
+
+            <div class="panel-card is-hidden" id="client-appointments-panel">
+              <h3>Mis turnos</h3>
+              <ul class="list" id="client-appointments"></ul>
+              <p id="client-message" class="form-message"></p>
+            </div>
+
+            <div class="panel-card is-hidden" id="barber-panel">
+              <h3>Mi agenda</h3>
+              <div class="form-grid">
+                <label>
+                  Fecha
+                  <input id="barber-date" type="date" />
+                </label>
+                <ul class="list" id="barber-appointments"></ul>
+                <p id="barber-message" class="form-message"></p>
+              </div>
+            </div>
+
+            <div class="panel-card is-hidden" id="barber-history-panel">
+              <h3>Trayectoria</h3>
+              <ul class="list" id="barber-history"></ul>
+            </div>
+
+            <div class="panel-card is-hidden" id="owner-panel">
+              <h3>Agenda de la peluqueria</h3>
+              <div class="form-grid">
+                <label>
+                  Peluquero
+                  <select id="owner-barber"></select>
+                </label>
+                <label>
+                  Fecha
+                  <input id="owner-date" type="date" />
+                </label>
+                <ul class="list" id="owner-appointments"></ul>
+                <p id="owner-message" class="form-message"></p>
+              </div>
+            </div>
+
+            <div class="panel-card is-hidden" id="owner-history-panel">
+              <h3>Trayectoria por mes</h3>
+              <ul class="list" id="owner-history"></ul>
+            </div>
+
+            <div class="panel-card is-hidden" id="owner-manage-panel">
+              <h3>Gestion de peluqueros</h3>
+              <form id="owner-create-form" class="form-grid">
+                <p class="muted">Crear peluquero</p>
                 <label>
                   Nombre
-                  <input id="user-name" type="text" placeholder="Ej: Sofia" required />
+                  <input id="owner-user-name" type="text" placeholder="Ej: Mateo" />
+                </label>
+                <label>
+                  Usuario
+                  <input id="owner-user-username" type="text" placeholder="Ej: mateo" />
+                </label>
+                <label>
+                  Clave
+                  <input id="owner-user-password" type="password" placeholder="Ej: 123456" />
+                </label>
+                <label>
+                  Peluqueria
+                  <input id="owner-user-shop" type="text" disabled />
+                </label>
+                <button class="cta full" type="submit">Crear peluquero</button>
+              </form>
+              <form id="owner-convert-form" class="form-grid">
+                <p class="muted">Convertir cliente a peluquero</p>
+                <label>
+                  Usuario existente
+                  <input id="owner-convert-username" type="text" placeholder="Ej: cliente1" />
+                </label>
+                <button class="ghost full" type="submit">Convertir</button>
+              </form>
+              <p id="owner-manage-message" class="form-message"></p>
+            </div>
+
+            <div class="panel-card is-hidden" id="admin-panel">
+              <h3>Panel admin</h3>
+              <form id="admin-shop-form" class="form-grid">
+                <p class="muted">Crear peluqueria</p>
+                <label>
+                  Nombre
+                  <input id="admin-shop-name" type="text" placeholder="Ej: Estudio Norte" />
+                </label>
+                <label>
+                  Direccion
+                  <input id="admin-shop-address" type="text" placeholder="Ej: Calle 9 #550" />
+                </label>
+                <button class="cta full" type="submit">Crear peluqueria</button>
+              </form>
+              <form id="admin-user-form" class="form-grid">
+                <p class="muted">Crear usuario</p>
+                <label>
+                  Nombre
+                  <input id="admin-user-name" type="text" placeholder="Ej: Sofia" />
+                </label>
+                <label>
+                  Usuario
+                  <input id="admin-user-username" type="text" placeholder="Ej: sofia" />
+                </label>
+                <label>
+                  Clave
+                  <input id="admin-user-password" type="password" placeholder="Ej: 123456" />
                 </label>
                 <label>
                   Rol
-                  <select id="user-role" required>
-                    <option value="admin">Administrador</option>
+                  <select id="admin-user-role">
                     <option value="cliente">Cliente</option>
                     <option value="peluquero">Peluquero</option>
-                    <option value="peluqueroAdmin">PeluqueroAdmin</option>
+                    <option value="dueno">Dueno</option>
+                    <option value="admin">Admin</option>
                   </select>
                 </label>
                 <label>
                   Peluqueria (si aplica)
-                  <select id="user-shop"></select>
+                  <select id="admin-user-shop"></select>
                 </label>
                 <button class="cta full" type="submit">Crear usuario</button>
-                <p id="user-message" class="form-message"></p>
               </form>
-            </div>
-            <div class="panel-card">
-              <h3>Crear peluqueria</h3>
-              <form id="shop-form" class="form-grid">
+              <form id="admin-convert-form" class="form-grid">
+                <p class="muted">Convertir cliente a peluquero</p>
                 <label>
-                  Nombre del local
-                  <input id="shop-name" type="text" placeholder="Ej: Estudio Norte" required />
+                  Usuario existente
+                  <input id="admin-convert-username" type="text" placeholder="Ej: cliente1" />
                 </label>
                 <label>
-                  Direccion
-                  <input id="shop-address" type="text" placeholder="Ej: Calle 9 #550" required />
+                  Peluqueria destino
+                  <select id="admin-convert-shop"></select>
                 </label>
-                <button class="cta full" type="submit">Crear peluqueria</button>
-                <p id="shop-message" class="form-message"></p>
+                <button class="ghost full" type="submit">Convertir</button>
               </form>
-            </div>
-          </div>
-          <div class="management-lists">
-            <div class="list-card">
-              <h4>Usuarios creados</h4>
-              <ul id="user-list"></ul>
-            </div>
-            <div class="list-card">
-              <h4>Locales creados</h4>
-              <ul id="shop-list"></ul>
-            </div>
-          </div>
-        </section>
-
-        <section id="roles" class="section dark">
-          <div class="section-head">
-            <h2>Roles claros, permisos simples</h2>
-            <p>Cuatro perfiles con responsabilidades separadas.</p>
-          </div>
-          <div class="roles-grid">
-            <article class="role-card">
-              <h3>Administrador</h3>
-              <p>Gestion global, reportes, pagos y soporte.</p>
-              <ul>
-                <li>Alta de peluquerias</li>
-                <li>Control de planes</li>
-                <li>Visibilidad total</li>
-              </ul>
-            </article>
-            <article class="role-card">
-              <h3>Cliente</h3>
-              <p>Reserva y seguimiento del turno en un flujo corto.</p>
-              <ul>
-                <li>Seleccion de peluqueria</li>
-                <li>Eleccion de peluquero</li>
-                <li>Confirmacion rapida</li>
-              </ul>
-            </article>
-            <article class="role-card">
-              <h3>Peluquero</h3>
-              <p>Agenda visual con turnos en tiempo real.</p>
-              <ul>
-                <li>Vista del dia</li>
-                <li>Historial de clientes</li>
-                <li>Confirmaciones</li>
-              </ul>
-            </article>
-            <article class="role-card accent">
-              <h3>PeluqueroAdmin</h3>
-              <p>Administra solo su peluqueria.</p>
-              <ul>
-                <li>Alta/baja de peluqueros</li>
-                <li>Edicion de servicios</li>
-                <li>Reglas de horarios</li>
-              </ul>
-            </article>
-          </div>
-        </section>
-
-        <section class="section" id="agenda">
-          <div class="section-head">
-            <h2>Agenda en tres pasos</h2>
-            <p>El cliente toma su turno y el peluquero lo ve al instante.</p>
-          </div>
-          <div class="flow">
-            <div class="flow-step">
-              <span>01</span>
-              <h3>Elegi peluqueria</h3>
-              <p>Selecciona entre las peluquerias activas.</p>
-            </div>
-            <div class="flow-step">
-              <span>02</span>
-              <h3>Elegi peluquero</h3>
-              <p>Solo se muestran los horarios disponibles.</p>
-            </div>
-            <div class="flow-step">
-              <span>03</span>
-              <h3>Confirmacion</h3>
-              <p>El turno impacta en la agenda del peluquero.</p>
-            </div>
-          </div>
-        </section>
-
-        <section class="section booking" id="app">
-          <div class="booking-left">
-            <h2>Web ahora, app despues</h2>
-            <p>
-              El diseno es responsive y preparado para convertirlo en app sin
-              friccion. Los mismos flujos sirven para web y mobile.
-            </p>
-            <div class="device-grid">
-              <div class="device-card">
-                <p>Web</p>
-                <div class="device-screen"></div>
+              <div class="stats-card">
+                <p class="muted">Turnos del mes</p>
+                <p id="admin-stats" class="stats-total">0</p>
               </div>
-              <div class="device-card">
-                <p>App</p>
-                <div class="device-screen phone"></div>
-              </div>
-            </div>
-          </div>
-          <div class="booking-panel">
-            <h3>Agendar turno</h3>
-            <form id="booking-form">
-              <label>
-                Cliente
-                <select id="booking-client"></select>
-              </label>
-              <label>
-                Peluqueria
-                <select id="booking-shop"></select>
-              </label>
-              <label>
-                Peluquero
-                <select id="booking-barber"></select>
-              </label>
-              <label>
-                Servicio
-                <select id="booking-service"></select>
-              </label>
-              <label>
-                Fecha
-                <input id="booking-date" type="date" />
-              </label>
-              <div class="slot-section">
-                <p class="muted">Horarios disponibles</p>
-                <div id="booking-slots" class="slot-grid"></div>
-                <p id="booking-message" class="form-message"></p>
-              </div>
-              <button class="cta full" type="submit">Agendar</button>
-            </form>
-            <div class="agenda-preview">
-              <div>
-                <p class="muted">Agenda del peluquero</p>
-                <p id="agenda-name" class="agenda-name"></p>
-                <p id="agenda-date" class="muted"></p>
-              </div>
-              <ul id="agenda-list"></ul>
+              <p id="admin-message" class="form-message"></p>
             </div>
           </div>
         </section>
