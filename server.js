@@ -1,5 +1,7 @@
+const fs = require("fs");
 const path = require("path");
 const express = require("express");
+const multer = require("multer");
 const { Pool } = require("pg");
 
 const app = express();
@@ -12,6 +14,22 @@ if (!process.env.DATABASE_URL) {
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
+});
+
+const UPLOAD_DIR = path.join(__dirname, "uploads");
+if (!fs.existsSync(UPLOAD_DIR)) {
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+}
+
+const upload = multer({
+  dest: UPLOAD_DIR,
+  limits: { fileSize: 2 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (!file.mimetype.startsWith("image/")) {
+      return cb(new Error("Formato de imagen invalido"));
+    }
+    cb(null, true);
+  },
 });
 
 const asyncHandler = (handler) => (req, res, next) =>
@@ -58,6 +76,7 @@ async function dbRun(sql, params = []) {
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
+app.use("/uploads", express.static(UPLOAD_DIR));
 
 app.get("/api/health", (req, res) => {
   res.json({ ok: true });
@@ -95,7 +114,9 @@ app.post(
 app.get(
   "/api/shops",
   asyncHandler(async (req, res) => {
-    const shops = await dbAll("SELECT id, name, address FROM shops ORDER BY name");
+    const shops = await dbAll(
+      "SELECT id, name, address, logo_url FROM shops ORDER BY name"
+    );
     res.json(shops);
   })
 );
@@ -119,6 +140,54 @@ app.post(
     );
 
     res.json(result.rows[0]);
+  })
+);
+
+app.post(
+  "/api/shops/logo",
+  upload.single("logo"),
+  asyncHandler(async (req, res) => {
+    const { actorId, shopId } = req.body || {};
+    if (!actorId) {
+      return res.status(400).json({ error: "Falta actorId." });
+    }
+
+    const actor = await dbGet(
+      "SELECT id, role, shop_id as shopId FROM users WHERE id = $1",
+      [actorId]
+    );
+
+    if (!actor) {
+      return res.status(403).json({ error: "Sin permisos." });
+    }
+
+    const isAdmin = actor.role === "admin";
+    const isOwner = actor.role === "dueno";
+    if (!isAdmin && !isOwner) {
+      return res.status(403).json({ error: "Sin permisos." });
+    }
+
+    const targetShopId = isOwner ? actor.shopId : shopId;
+    if (!targetShopId) {
+      return res.status(400).json({ error: "Falta peluqueria." });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ error: "Falta la imagen." });
+    }
+
+    const ext = path.extname(req.file.originalname) || ".png";
+    const filename = `logo-${targetShopId}-${Date.now()}${ext}`;
+    const finalPath = path.join(UPLOAD_DIR, filename);
+    fs.renameSync(req.file.path, finalPath);
+
+    const logoUrl = `/uploads/${filename}`;
+    await dbRun("UPDATE shops SET logo_url = $1 WHERE id = $2", [
+      logoUrl,
+      targetShopId,
+    ]);
+
+    res.json({ logoUrl });
   })
 );
 
@@ -513,6 +582,12 @@ app.post(
 
 app.use((err, req, res, next) => {
   console.error("Error:", err.message);
+  if (err.message === "Formato de imagen invalido") {
+    return res.status(400).json({ error: err.message });
+  }
+  if (err.code === "LIMIT_FILE_SIZE") {
+    return res.status(400).json({ error: "Imagen demasiado grande" });
+  }
   res.status(500).json({ error: "Error de servidor" });
 });
 

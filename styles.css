@@ -247,6 +247,43 @@ body {
   gap: 18px;
 }
 
+.shop-selector {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.shop-card {
+  border: none;
+  background: #fff;
+  border-radius: 18px;
+  padding: 16px;
+  text-align: left;
+  box-shadow: var(--shadow);
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  gap: 12px;
+  align-items: center;
+  cursor: pointer;
+}
+
+.shop-logo {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  object-fit: cover;
+  background: #ffe6d6;
+}
+
+.shop-meta h4 {
+  font-size: 1rem;
+}
+
+.shop-meta p {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
 .cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
@@ -432,6 +469,24 @@ input {
   font-size: 2rem;
   font-weight: 700;
   color: var(--ink);
+}
+
+.logo-preview {
+  width: 140px;
+  height: 140px;
+  border-radius: 16px;
+  display: block;
+  background: #f1f1f1;
+  border: 1px dashed #e2e2e2;
+}
+
+.crop-controls {
+  display: grid;
+  gap: 8px;
+}
+
+.crop-controls input[type="range"] {
+  accent-color: var(--accent);
 }
 
 .agenda-preview {

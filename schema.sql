@@ -1,7 +1,8 @@
 CREATE TABLE IF NOT EXISTS shops (
   id SERIAL PRIMARY KEY,
   name TEXT NOT NULL,
-  address TEXT NOT NULL
+  address TEXT NOT NULL,
+  logo_url TEXT
 );
 
 CREATE TABLE IF NOT EXISTS users (

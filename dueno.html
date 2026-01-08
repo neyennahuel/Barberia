@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dueno | Barberia</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="site-header">
+        <div class="brand">
+          <span class="brand-mark">BT</span>
+          <div>
+            <p class="brand-name">BarberTurno</p>
+            <p class="brand-tag">Dueno</p>
+          </div>
+        </div>
+        <nav class="site-nav">
+          <a href="#agenda">Agenda</a>
+          <a href="#trayectoria">Trayectoria</a>
+          <a href="#gestion">Gestion</a>
+        </nav>
+        <div class="session-pill" id="session-pill">Sin sesion</div>
+        <button class="ghost" id="logout-btn">Cerrar sesion</button>
+      </header>
+
+      <main>
+        <section class="section panels" id="agenda">
+          <div class="section-head">
+            <h2>Agenda</h2>
+            <p>Selecciona un peluquero para ver sus turnos.</p>
+          </div>
+          <div class="panel-grid">
+            <div class="panel-card">
+              <div class="form-grid">
+                <label>
+                  Peluquero
+                  <select id="owner-barber"></select>
+                </label>
+                <label>
+                  Fecha
+                  <input id="owner-date" type="date" />
+                </label>
+                <ul class="list" id="owner-appointments"></ul>
+                <p id="owner-message" class="form-message"></p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section panels" id="trayectoria">
+          <div class="section-head">
+            <h2>Trayectoria</h2>
+            <p>Resumen mensual de cortes de tu equipo.</p>
+          </div>
+          <div class="panel-grid">
+            <div class="panel-card">
+              <ul class="list" id="owner-history"></ul>
+            </div>
+          </div>
+        </section>
+
+        <section class="section panels" id="gestion">
+          <div class="section-head">
+            <h2>Gestion de peluqueros</h2>
+            <p>Sumar nuevos peluqueros o convertir clientes.</p>
+          </div>
+          <div class="panel-grid">
+            <div class="panel-card">
+              <form id="owner-create-form" class="form-grid">
+                <p class="muted">Crear peluquero</p>
+                <label>
+                  Nombre
+                  <input id="owner-user-name" type="text" placeholder="Ej: Mateo" />
+                </label>
+                <label>
+                  Usuario
+                  <input id="owner-user-username" type="text" placeholder="Ej: mateo" />
+                </label>
+                <label>
+                  Clave
+                  <input id="owner-user-password" type="password" placeholder="Ej: 123456" />
+                </label>
+                <label>
+                  Peluqueria
+                  <input id="owner-user-shop" type="text" disabled />
+                </label>
+                <button class="cta full" type="submit">Crear peluquero</button>
+              </form>
+              <form id="owner-convert-form" class="form-grid">
+                <p class="muted">Convertir cliente a peluquero</p>
+                <label>
+                  Usuario existente
+                  <input id="owner-convert-username" type="text" placeholder="Ej: cliente1" />
+                </label>
+                <button class="ghost full" type="submit">Convertir</button>
+              </form>
+              <form id="owner-logo-form" class="form-grid">
+                <p class="muted">Logo de la peluqueria</p>
+                <label>
+                  Subir logo (PNG/JPG)
+                  <input id="owner-logo-input" type="file" accept="image/*" />
+                </label>
+                <div class="crop-controls">
+                  <canvas
+                    id="owner-logo-preview"
+                    class="logo-preview"
+                    width="140"
+                    height="140"
+                  ></canvas>
+                  <input
+                    id="owner-logo-zoom"
+                    type="range"
+                    min="1"
+                    max="2"
+                    step="0.01"
+                    value="1"
+                  />
+                </div>
+                <button class="ghost full" type="submit">Guardar logo</button>
+              </form>
+              <p id="owner-manage-message" class="form-message"></p>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+    <script src="shared.js"></script>
+    <script src="dueno.js"></script>
+  </body>
+</html>

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Peluquero | Barberia</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="site-header">
+        <div class="brand">
+          <span class="brand-mark">BT</span>
+          <div>
+            <p class="brand-name">BarberTurno</p>
+            <p class="brand-tag">Peluquero</p>
+          </div>
+        </div>
+        <nav class="site-nav">
+          <a href="#agenda">Mi agenda</a>
+          <a href="#trayectoria">Trayectoria</a>
+        </nav>
+        <div class="session-pill" id="session-pill">Sin sesion</div>
+        <button class="ghost" id="logout-btn">Cerrar sesion</button>
+      </header>
+
+      <main>
+        <section class="section panels" id="agenda">
+          <div class="section-head">
+            <h2>Mi agenda</h2>
+            <p>Turnos del dia con opcion de cancelar.</p>
+          </div>
+          <div class="panel-grid">
+            <div class="panel-card">
+              <div class="form-grid">
+                <label>
+                  Fecha
+                  <input id="barber-date" type="date" />
+                </label>
+                <ul class="list" id="barber-appointments"></ul>
+                <p id="barber-message" class="form-message"></p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section panels" id="trayectoria">
+          <div class="section-head">
+            <h2>Trayectoria</h2>
+            <p>Resumen de cortes realizados por mes.</p>
+          </div>
+          <div class="panel-grid">
+            <div class="panel-card">
+              <ul class="list" id="barber-history"></ul>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+    <script src="shared.js"></script>
+    <script src="peluquero.js"></script>
+  </body>
+</html>

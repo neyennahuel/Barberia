@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin | Barberia</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="site-header">
+        <div class="brand">
+          <span class="brand-mark">BT</span>
+          <div>
+            <p class="brand-name">BarberTurno</p>
+            <p class="brand-tag">Admin</p>
+          </div>
+        </div>
+        <nav class="site-nav">
+          <a href="#gestion">Gestion</a>
+          <a href="#metricas">Metricas</a>
+        </nav>
+        <div class="session-pill" id="session-pill">Sin sesion</div>
+        <button class="ghost" id="logout-btn">Cerrar sesion</button>
+      </header>
+
+      <main>
+        <section class="section panels" id="gestion">
+          <div class="section-head">
+            <h2>Gestion</h2>
+            <p>Crear usuarios, locales y gestionar conversiones.</p>
+          </div>
+          <div class="panel-grid">
+            <div class="panel-card">
+              <form id="admin-shop-form" class="form-grid">
+                <p class="muted">Crear peluqueria</p>
+                <label>
+                  Nombre
+                  <input id="admin-shop-name" type="text" placeholder="Ej: Estudio Norte" />
+                </label>
+                <label>
+                  Direccion
+                  <input id="admin-shop-address" type="text" placeholder="Ej: Calle 9 #550" />
+                </label>
+                <button class="cta full" type="submit">Crear peluqueria</button>
+              </form>
+            </div>
+            <div class="panel-card">
+              <form id="admin-user-form" class="form-grid">
+                <p class="muted">Crear usuario</p>
+                <label>
+                  Nombre
+                  <input id="admin-user-name" type="text" placeholder="Ej: Sofia" />
+                </label>
+                <label>
+                  Usuario
+                  <input id="admin-user-username" type="text" placeholder="Ej: sofia" />
+                </label>
+                <label>
+                  Clave
+                  <input id="admin-user-password" type="password" placeholder="Ej: 123456" />
+                </label>
+                <label>
+                  Rol
+                  <select id="admin-user-role">
+                    <option value="cliente">Cliente</option>
+                    <option value="peluquero">Peluquero</option>
+                    <option value="dueno">Dueno</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </label>
+                <label>
+                  Peluqueria (si aplica)
+                  <select id="admin-user-shop"></select>
+                </label>
+                <button class="cta full" type="submit">Crear usuario</button>
+              </form>
+            </div>
+            <div class="panel-card">
+              <form id="admin-convert-form" class="form-grid">
+                <p class="muted">Convertir cliente a peluquero</p>
+                <label>
+                  Usuario existente
+                  <input id="admin-convert-username" type="text" placeholder="Ej: cliente1" />
+                </label>
+                <label>
+                  Peluqueria destino
+                  <select id="admin-convert-shop"></select>
+                </label>
+                <button class="ghost full" type="submit">Convertir</button>
+              </form>
+            </div>
+            <div class="panel-card">
+              <form id="admin-logo-form" class="form-grid">
+                <p class="muted">Logo de peluqueria</p>
+                <label>
+                  Peluqueria
+                  <select id="admin-logo-shop"></select>
+                </label>
+                <label>
+                  Subir logo (PNG/JPG)
+                  <input id="admin-logo-input" type="file" accept="image/*" />
+                </label>
+                <div class="crop-controls">
+                  <canvas
+                    id="admin-logo-preview"
+                    class="logo-preview"
+                    width="140"
+                    height="140"
+                  ></canvas>
+                  <input
+                    id="admin-logo-zoom"
+                    type="range"
+                    min="1"
+                    max="2"
+                    step="0.01"
+                    value="1"
+                  />
+                </div>
+                <button class="ghost full" type="submit">Guardar logo</button>
+              </form>
+            </div>
+          </div>
+          <p id="admin-message" class="form-message"></p>
+        </section>
+
+        <section class="section panels" id="metricas">
+          <div class="section-head">
+            <h2>Metricas</h2>
+            <p>Uso mensual de la plataforma.</p>
+          </div>
+          <div class="panel-grid">
+            <div class="panel-card stats-card">
+              <p class="muted">Turnos del mes</p>
+              <p id="admin-stats" class="stats-total">0</p>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+    <script src="shared.js"></script>
+    <script src="admin.js"></script>
+  </body>
+</html>

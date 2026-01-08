@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cliente | Barberia</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="site-header">
+        <div class="brand">
+          <span class="brand-mark">BT</span>
+          <div>
+            <p class="brand-name">BarberTurno</p>
+            <p class="brand-tag">Cliente</p>
+          </div>
+        </div>
+        <nav class="site-nav">
+          <a href="#turno">Turnos</a>
+          <a href="#mis-turnos">Mis turnos</a>
+        </nav>
+        <div class="session-pill" id="session-pill">Sin sesion</div>
+        <button class="ghost" id="logout-btn">Cerrar sesion</button>
+      </header>
+
+      <main>
+        <section class="section panels" id="barberias">
+          <div class="section-head">
+            <h2>Barberias</h2>
+            <p>Elegi tu barberia para ir directo a sacar turno.</p>
+          </div>
+          <div class="shop-selector" id="shop-list"></div>
+        </section>
+
+        <section class="section panels" id="turno">
+          <div class="section-head">
+            <h2>Solicitar turno</h2>
+            <p>Elegis la peluqueria, el peluquero y un horario disponible.</p>
+          </div>
+          <div class="panel-grid">
+            <div class="panel-card">
+              <form id="booking-form" class="form-grid">
+                <label>
+                  Peluqueria
+                  <select id="booking-shop"></select>
+                </label>
+                <label>
+                  Peluquero
+                  <select id="booking-barber"></select>
+                </label>
+                <label>
+                  Servicio
+                  <select id="booking-service"></select>
+                </label>
+                <label>
+                  Fecha
+                  <input id="booking-date" type="date" />
+                </label>
+                <div class="slot-section">
+                  <p class="muted">Horarios disponibles</p>
+                  <div id="booking-slots" class="slot-grid"></div>
+                  <p id="booking-message" class="form-message"></p>
+                </div>
+                <button class="cta full" type="submit">Agendar</button>
+              </form>
+            </div>
+          </div>
+        </section>
+
+        <section class="section panels" id="mis-turnos">
+          <div class="section-head">
+            <h2>Mis turnos</h2>
+            <p>Se limpian automaticamente cuando ya pasaron.</p>
+          </div>
+          <div class="panel-grid">
+            <div class="panel-card">
+              <ul class="list" id="client-appointments"></ul>
+              <p id="client-message" class="form-message"></p>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+    <script src="shared.js"></script>
+    <script src="cliente.js"></script>
+  </body>
+</html>
