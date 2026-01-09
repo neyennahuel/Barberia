@@ -38,7 +38,7 @@
                   Peluquero
                   <select id="owner-barber"></select>
                 </label>
-                <label>
+                <label class="date-field">
                   Fecha
                   <input id="owner-date" type="date" />
                 </label>
@@ -96,27 +96,35 @@
                 </label>
                 <button class="ghost full" type="submit">Convertir</button>
               </form>
+              <form id="owner-remove-form" class="form-grid">
+                <p class="muted">Eliminar peluquero</p>
+                <label>
+                  Peluquero
+                  <select id="owner-remove-barber"></select>
+                </label>
+                <button class="ghost full" type="submit">Eliminar</button>
+              </form>
               <form id="owner-logo-form" class="form-grid">
                 <p class="muted">Logo de la peluqueria</p>
-                <label>
-                  Subir logo (PNG/JPG)
+                <label class="upload-card" for="owner-logo-input">
                   <input id="owner-logo-input" type="file" accept="image/*" />
+                  <div class="upload-icon" aria-hidden="true">UP</div>
+                  <div>
+                    <p class="upload-title">Subi una imagen</p>
+                    <p class="upload-hint">PNG o JPG, recomendacion 1:1</p>
+                  </div>
+                  <span class="ghost upload-cta">Elegir archivo</span>
                 </label>
-                <div class="crop-controls">
+                <div class="logo-preview-row">
                   <canvas
-                    id="owner-logo-preview"
-                    class="logo-preview"
-                    width="140"
-                    height="140"
+                    id="owner-logo-thumb"
+                    class="logo-thumb"
+                    width="120"
+                    height="120"
                   ></canvas>
-                  <input
-                    id="owner-logo-zoom"
-                    type="range"
-                    min="1"
-                    max="2"
-                    step="0.01"
-                    value="1"
-                  />
+                  <button class="ghost" type="button" id="owner-logo-edit" disabled>
+                    Editar recorte
+                  </button>
                 </div>
                 <button class="ghost full" type="submit">Guardar logo</button>
               </form>
@@ -125,6 +133,43 @@
           </div>
         </section>
       </main>
+    </div>
+    <div class="modal-backdrop is-hidden" id="confirm-modal" aria-hidden="true">
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+        <h3 id="confirm-title">Confirmar eliminacion</h3>
+        <p id="confirm-message"></p>
+        <div class="modal-actions">
+          <button class="ghost" type="button" id="confirm-cancel">Cancelar</button>
+          <button class="cta" type="button" id="confirm-accept">Eliminar</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-backdrop is-hidden" id="logo-modal" aria-hidden="true">
+      <div class="modal-card logo-modal" role="dialog" aria-modal="true" aria-labelledby="logo-title">
+        <div class="logo-modal-head">
+          <h3 id="logo-title">Editar logo</h3>
+          <button class="ghost icon-btn" type="button" id="logo-close" aria-label="Cerrar">
+            X
+          </button>
+        </div>
+        <div class="logo-modal-body">
+          <div class="crop-frame">
+            <canvas id="owner-logo-preview" width="320" height="320"></canvas>
+          </div>
+          <div class="crop-tools">
+            <label class="range-label">
+              Zoom
+              <input id="owner-logo-zoom" type="range" min="1" max="2" step="0.01" value="1" />
+            </label>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <div class="modal-actions-right">
+            <button class="ghost" type="button" id="logo-cancel">Cancelar</button>
+            <button class="cta" type="button" id="logo-apply">Aplicar</button>
+          </div>
+        </div>
+      </div>
     </div>
     <script src="shared.js"></script>
     <script src="dueno.js"></script>

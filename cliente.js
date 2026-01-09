@@ -8,9 +8,12 @@ const bookingService = document.getElementById("booking-service");
 const bookingDate = document.getElementById("booking-date");
 const bookingSlots = document.getElementById("booking-slots");
 const bookingMessage = document.getElementById("booking-message");
+const bookingPanel = document.getElementById("booking-panel");
+const bookingSection = document.getElementById("turno");
 const clientAppointments = document.getElementById("client-appointments");
 const clientMessage = document.getElementById("client-message");
 const shopList = document.getElementById("shop-list");
+const shopSearch = document.getElementById("shop-search");
 
 let cachedShops = [];
 let selectedSlot = "";
@@ -41,9 +44,27 @@ function createLogoData(name) {
   return canvas.toDataURL("image/png");
 }
 
+function getFilteredShops() {
+  if (!shopSearch) return cachedShops;
+  const term = shopSearch.value.trim().toLowerCase();
+  if (!term) return cachedShops;
+  return cachedShops.filter((shop) => {
+    const haystack = `${shop.name} ${shop.address}`.toLowerCase();
+    return haystack.includes(term);
+  });
+}
+
 function renderShopCards() {
   shopList.innerHTML = "";
-  cachedShops.forEach((shop) => {
+  const filtered = getFilteredShops();
+  if (!filtered.length) {
+    const empty = document.createElement("p");
+    empty.className = "muted";
+    empty.textContent = "No se encontraron barberias.";
+    shopList.appendChild(empty);
+    return;
+  }
+  filtered.forEach((shop) => {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "shop-card";
@@ -65,13 +86,20 @@ function renderShopCards() {
   });
 }
 
+function updateBookingVisibility() {
+  const hasShop = Boolean(bookingShop.value);
+  if (bookingSection) {
+    bookingSection.classList.toggle("is-hidden", !hasShop);
+  }
+  if (bookingPanel) {
+    bookingPanel.classList.toggle("is-hidden", !hasShop);
+  }
+}
+
 async function loadShops() {
   cachedShops = await fetchJSON("/api/shops");
-  const options = cachedShops.map((shop) => ({ label: shop.name, value: shop.id }));
-  setOptions(bookingShop, options, "Selecciona una peluqueria");
-  if (options.length) bookingShop.value = options[0].value;
   renderShopCards();
-  await refreshBooking();
+  updateBookingVisibility();
 }
 
 async function loadBarbers(shopId) {
@@ -142,6 +170,14 @@ async function renderSlots() {
 }
 
 async function refreshBooking() {
+  updateBookingVisibility();
+  if (!bookingShop.value) {
+    setOptions(bookingBarber, [], "Selecciona peluquero");
+    setOptions(bookingService, [], "Selecciona servicio");
+    bookingSlots.innerHTML = "";
+    bookingMessage.textContent = "";
+    return;
+  }
   await loadBarbers(bookingShop.value);
   await loadServices(bookingShop.value);
   await renderSlots();
@@ -175,6 +211,24 @@ async function loadClientAppointments() {
 bookingShop.addEventListener("change", refreshBooking);
 bookingBarber.addEventListener("change", renderSlots);
 bookingDate.addEventListener("change", renderSlots);
+if (shopSearch) {
+  shopSearch.addEventListener("input", renderShopCards);
+}
+
+function openDatePicker() {
+  if (!bookingDate) return;
+  if (typeof bookingDate.showPicker === "function") {
+    bookingDate.showPicker();
+    return;
+  }
+  bookingDate.focus();
+  bookingDate.click();
+}
+
+const bookingDateField = bookingDate?.closest(".date-field");
+if (bookingDateField) {
+  bookingDateField.addEventListener("click", openDatePicker);
+}
 
 bookingForm.addEventListener("submit", async (event) => {
   event.preventDefault();

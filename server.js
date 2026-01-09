@@ -1,20 +1,11 @@
-const fs = require("fs");
+﻿const fs = require("fs");
 const path = require("path");
 const express = require("express");
 const multer = require("multer");
-const { Pool } = require("pg");
+const { dbAll, dbGet, dbRun } = require("./data/db");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
-if (!process.env.DATABASE_URL) {
-  console.error("Falta DATABASE_URL");
-  process.exit(1);
-}
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
 
 const UPLOAD_DIR = path.join(__dirname, "uploads");
 if (!fs.existsSync(UPLOAD_DIR)) {
@@ -58,20 +49,6 @@ function isPastTimeForDate(dateStr, timeStr) {
   const now = new Date();
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
   return timeToMinutes(timeStr) <= nowMinutes;
-}
-
-async function dbAll(sql, params = []) {
-  const result = await pool.query(sql, params);
-  return result.rows;
-}
-
-async function dbGet(sql, params = []) {
-  const result = await pool.query(sql, params);
-  return result.rows[0] || null;
-}
-
-async function dbRun(sql, params = []) {
-  return pool.query(sql, params);
 }
 
 app.use(express.json());
@@ -284,6 +261,51 @@ app.get(
     );
 
     res.json(rows);
+  })
+);
+
+app.delete(
+  "/api/barbers/:id",
+  asyncHandler(async (req, res) => {
+    const { actorId } = req.body || {};
+    const barberId = req.params.id;
+    if (!actorId) {
+      return res.status(400).json({ error: "Falta actorId" });
+    }
+
+    const actor = await dbGet(
+      "SELECT id, role, shop_id as shopId FROM users WHERE id = $1",
+      [actorId]
+    );
+
+    if (!actor) {
+      return res.status(403).json({ error: "Sin permisos." });
+    }
+
+    const barber = await dbGet(
+      "SELECT id, shop_id as shopId, user_id as userId FROM barbers WHERE id = $1",
+      [barberId]
+    );
+
+    if (!barber) {
+      return res.status(404).json({ error: "Peluquero no encontrado." });
+    }
+
+    const isAdmin = actor.role === "admin";
+    const isOwner = actor.role === "dueno" && actor.shopId === barber.shopId;
+    if (!isAdmin && !isOwner) {
+      return res.status(403).json({ error: "Sin permisos." });
+    }
+
+    await dbRun("DELETE FROM appointments WHERE barber_id = $1", [barber.id]);
+    await dbRun("DELETE FROM barber_slots WHERE barber_id = $1", [barber.id]);
+    await dbRun("DELETE FROM barbers WHERE id = $1", [barber.id]);
+    await dbRun(
+      "UPDATE users SET role = 'cliente', shop_id = NULL WHERE id = $1",
+      [barber.userId]
+    );
+
+    res.json({ ok: true });
   })
 );
 
@@ -594,3 +616,5 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`Servidor listo en http://localhost:${PORT}`);
 });
+
+

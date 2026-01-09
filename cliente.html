@@ -27,24 +27,33 @@
       <main>
         <section class="section panels" id="barberias">
           <div class="section-head">
-            <h2>Barberias</h2>
-            <p>Elegi tu barberia para ir directo a sacar turno.</p>
+            <div class="section-head-row">
+              <div>
+                <h2>Barberias</h2>
+                <p>Elegi tu barberia para ir directo a sacar turno.</p>
+              </div>
+              <div class="shop-search">
+                <input
+                  id="shop-search"
+                  type="search"
+                  placeholder="Buscar barberia"
+                  aria-label="Buscar barberia"
+                />
+              </div>
+            </div>
           </div>
           <div class="shop-selector" id="shop-list"></div>
         </section>
 
-        <section class="section panels" id="turno">
+        <section class="section panels is-hidden" id="turno">
           <div class="section-head">
             <h2>Solicitar turno</h2>
             <p>Elegis la peluqueria, el peluquero y un horario disponible.</p>
           </div>
           <div class="panel-grid">
-            <div class="panel-card">
+            <div class="panel-card is-hidden" id="booking-panel">
               <form id="booking-form" class="form-grid">
-                <label>
-                  Peluqueria
-                  <select id="booking-shop"></select>
-                </label>
+                <input id="booking-shop" type="hidden" />
                 <label>
                   Peluquero
                   <select id="booking-barber"></select>
@@ -53,7 +62,7 @@
                   Servicio
                   <select id="booking-service"></select>
                 </label>
-                <label>
+                <label class="date-field">
                   Fecha
                   <input id="booking-date" type="date" />
                 </label>

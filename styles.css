@@ -235,6 +235,24 @@ body {
   font-size: clamp(1.8rem, 3vw, 2.6rem);
 }
 
+.section-head-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.shop-search {
+  flex: 1;
+  min-width: 220px;
+  max-width: 320px;
+}
+
+.shop-search input {
+  background: #fff;
+}
+
 .panels {
   background: rgba(255, 255, 255, 0.6);
   border-radius: var(--radius);
@@ -393,6 +411,14 @@ body {
   font-size: 0.9rem;
 }
 
+.date-field {
+  cursor: pointer;
+}
+
+.date-field input {
+  cursor: pointer;
+}
+
 select,
 input {
   padding: 10px 12px;
@@ -478,6 +504,132 @@ input {
   display: block;
   background: #f1f1f1;
   border: 1px dashed #e2e2e2;
+}
+
+.logo-preview-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.logo-thumb {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: #f1f1f1;
+  border: 1px dashed #e2e2e2;
+}
+
+.logo-modal {
+  width: min(760px, 92vw);
+}
+
+.logo-modal-head {
+  display: grid;
+  grid-template-columns: minmax(300px, 1fr) minmax(220px, 260px);
+  align-items: center;
+}
+
+.logo-modal-head h3 {
+  grid-column: 2;
+  margin: 0 0 6px 0;
+}
+
+.logo-modal-head .icon-btn {
+  grid-column: 2;
+  justify-self: end;
+}
+
+.logo-modal-head h3 + .icon-btn {
+  margin-top: -42px;
+}
+
+.logo-modal-body {
+  display: grid;
+  grid-template-columns: minmax(300px, 1fr) minmax(220px, 260px);
+  gap: 32px;
+  align-items: center;
+}
+
+.crop-frame {
+  background: #f3f3f3;
+  border-radius: 22px;
+  padding: 26px;
+  display: grid;
+  place-items: center;
+}
+
+.crop-frame canvas {
+  width: 100%;
+  height: auto;
+  max-width: 360px;
+  border-radius: 50%;
+  background: #111;
+}
+
+.crop-tools {
+  display: grid;
+  gap: 18px;
+}
+
+.range-label {
+  display: grid;
+  gap: 12px;
+  font-size: 0.9rem;
+}
+
+.icon-btn {
+  border-radius: 999px;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+}
+
+.upload-card {
+  border: 1px dashed #d9d9d9;
+  border-radius: 18px;
+  padding: 16px 18px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 14px;
+  align-items: center;
+  background: #fff;
+  cursor: pointer;
+}
+
+.upload-card:hover {
+  border-color: #c0c0c0;
+  background: #fafafa;
+}
+
+.upload-card input {
+  display: none;
+}
+
+.upload-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: #fff4eb;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.upload-title {
+  font-weight: 600;
+}
+
+.upload-hint {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.upload-cta {
+  pointer-events: none;
 }
 
 .crop-controls {
@@ -567,7 +719,44 @@ input {
 }
 
 .is-hidden {
-  display: none;
+  display: none !important;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(12, 12, 12, 0.4);
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  z-index: 1000;
+}
+
+.modal-card {
+  background: #fff;
+  border-radius: 18px;
+  padding: 22px 24px;
+  box-shadow: var(--shadow);
+  width: min(420px, 100%);
+  display: grid;
+  gap: 12px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.logo-modal .modal-actions {
+  display: grid;
+  grid-template-columns: minmax(300px, 1fr) minmax(220px, 260px);
+}
+
+.logo-modal .modal-actions-right {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
 }
 
 @keyframes rise {

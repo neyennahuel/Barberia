@@ -11,13 +11,25 @@ const ownerCreateForm = document.getElementById("owner-create-form");
 const ownerUserName = document.getElementById("owner-user-name");
 const ownerUserUsername = document.getElementById("owner-user-username");
 const ownerUserPassword = document.getElementById("owner-user-password");
+const ownerRemoveForm = document.getElementById("owner-remove-form");
+const ownerRemoveBarber = document.getElementById("owner-remove-barber");
 const ownerConvertForm = document.getElementById("owner-convert-form");
 const ownerConvertUsername = document.getElementById("owner-convert-username");
 const ownerLogoForm = document.getElementById("owner-logo-form");
 const ownerLogoInput = document.getElementById("owner-logo-input");
 const ownerLogoPreview = document.getElementById("owner-logo-preview");
+const ownerLogoThumb = document.getElementById("owner-logo-thumb");
+const ownerLogoEdit = document.getElementById("owner-logo-edit");
 const ownerLogoZoom = document.getElementById("owner-logo-zoom");
 const ownerManageMessage = document.getElementById("owner-manage-message");
+const confirmModal = document.getElementById("confirm-modal");
+const confirmMessage = document.getElementById("confirm-message");
+const confirmCancel = document.getElementById("confirm-cancel");
+const confirmAccept = document.getElementById("confirm-accept");
+const logoModal = document.getElementById("logo-modal");
+const logoClose = document.getElementById("logo-close");
+const logoCancel = document.getElementById("logo-cancel");
+const logoApply = document.getElementById("logo-apply");
 
 const ownerCropper = createCropper({
   input: ownerLogoInput,
@@ -25,6 +37,63 @@ const ownerCropper = createCropper({
   zoom: ownerLogoZoom,
   message: ownerManageMessage,
 });
+
+function openLogoModal() {
+  if (!logoModal) return;
+  logoModal.classList.remove("is-hidden");
+  logoModal.setAttribute("aria-hidden", "false");
+  logoApply?.focus();
+}
+
+function closeLogoModal() {
+  if (!logoModal) return;
+  logoModal.classList.add("is-hidden");
+  logoModal.setAttribute("aria-hidden", "true");
+}
+
+async function syncThumbPreview() {
+  if (!ownerLogoThumb) return;
+  const blob = await ownerCropper.getBlob(240);
+  if (!blob) return;
+  const url = URL.createObjectURL(blob);
+  const img = new Image();
+  img.onload = () => {
+    const ctx = ownerLogoThumb.getContext("2d");
+    ctx.clearRect(0, 0, ownerLogoThumb.width, ownerLogoThumb.height);
+    ctx.drawImage(img, 0, 0, ownerLogoThumb.width, ownerLogoThumb.height);
+    URL.revokeObjectURL(url);
+  };
+  img.src = url;
+}
+
+function confirmAction(message) {
+  if (!confirmModal || !confirmMessage || !confirmCancel || !confirmAccept) {
+    return Promise.resolve(window.confirm(message));
+  }
+  confirmMessage.textContent = message;
+  confirmModal.classList.remove("is-hidden");
+  confirmModal.setAttribute("aria-hidden", "false");
+  confirmAccept.focus();
+
+  return new Promise((resolve) => {
+    const cleanup = () => {
+      confirmModal.classList.add("is-hidden");
+      confirmModal.setAttribute("aria-hidden", "true");
+      confirmCancel.removeEventListener("click", onCancel);
+      confirmAccept.removeEventListener("click", onAccept);
+    };
+    const onCancel = () => {
+      cleanup();
+      resolve(false);
+    };
+    const onAccept = () => {
+      cleanup();
+      resolve(true);
+    };
+    confirmCancel.addEventListener("click", onCancel);
+    confirmAccept.addEventListener("click", onAccept);
+  });
+}
 
 async function loadOwnerShopName() {
   try {
@@ -40,6 +109,9 @@ async function loadBarbers() {
   const barbers = await fetchJSON(`/api/barbers?shopId=${currentUser.shopId}`);
   const options = barbers.map((barber) => ({ label: barber.name, value: barber.id }));
   setOptions(ownerBarber, options, "Selecciona peluquero");
+  if (ownerRemoveBarber) {
+    setOptions(ownerRemoveBarber, options, "Selecciona peluquero");
+  }
   if (options.length) ownerBarber.value = options[0].value;
 }
 
@@ -155,6 +227,36 @@ ownerCreateForm.addEventListener("submit", async (event) => {
   }
 });
 
+ownerRemoveForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  ownerManageMessage.textContent = "";
+
+  try {
+    if (!ownerRemoveBarber.value) {
+      showMessage(ownerManageMessage, "Selecciona un peluquero.");
+      return;
+    }
+    const selectedName =
+      ownerRemoveBarber.options[ownerRemoveBarber.selectedIndex]?.textContent ||
+      "este peluquero";
+    const confirmed = await confirmAction(
+      `Se va a eliminar a ${selectedName}. ¿Continuar?`
+    );
+    if (!confirmed) return;
+    await fetchJSON(`/api/barbers/${ownerRemoveBarber.value}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ actorId: currentUser.id }),
+    });
+    showMessage(ownerManageMessage, "Peluquero eliminado.");
+    await loadBarbers();
+    await refreshAgenda();
+    await loadHistory();
+  } catch (error) {
+    showMessage(ownerManageMessage, error.message);
+  }
+});
+
 ownerConvertForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   ownerManageMessage.textContent = "";
@@ -211,11 +313,66 @@ ownerLogoForm.addEventListener("submit", async (event) => {
   }
 });
 
+if (ownerLogoInput) {
+  ownerLogoInput.addEventListener("change", () => {
+    if (ownerLogoEdit) ownerLogoEdit.disabled = !ownerLogoInput.value;
+    openLogoModal();
+  });
+}
+
+if (ownerLogoEdit) {
+  ownerLogoEdit.addEventListener("click", openLogoModal);
+}
+
+if (logoCancel) {
+  logoCancel.addEventListener("click", closeLogoModal);
+}
+
+if (logoClose) {
+  logoClose.addEventListener("click", closeLogoModal);
+}
+
+if (logoApply) {
+  logoApply.addEventListener("click", async () => {
+    await syncThumbPreview();
+    closeLogoModal();
+  });
+}
+
+if (logoModal) {
+  logoModal.addEventListener("click", (event) => {
+    if (event.target === logoModal) {
+      closeLogoModal();
+    }
+  });
+}
+
+window.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && logoModal && !logoModal.classList.contains("is-hidden")) {
+    closeLogoModal();
+  }
+});
+
 ownerBarber.addEventListener("change", async () => {
   await refreshAgenda();
   await loadHistory();
 });
 ownerDate.addEventListener("change", refreshAgenda);
+
+function openOwnerDatePicker() {
+  if (!ownerDate) return;
+  if (typeof ownerDate.showPicker === "function") {
+    ownerDate.showPicker();
+    return;
+  }
+  ownerDate.focus();
+  ownerDate.click();
+}
+
+const ownerDateField = ownerDate?.closest(".date-field");
+if (ownerDateField) {
+  ownerDateField.addEventListener("click", openOwnerDatePicker);
+}
 
 const today = getTodayISO();
 ownerDate.min = today;
