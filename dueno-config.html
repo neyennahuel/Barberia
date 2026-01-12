@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Configuracion | Barberia</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="site-header">
+        <div class="brand">
+          <span class="brand-mark">BT</span>
+          <div>
+            <p class="brand-name">BarberTurno</p>
+            <p class="brand-tag">Configuracion</p>
+          </div>
+        </div>
+        <nav class="site-nav">
+          <a href="dueno.html">Volver</a>
+        </nav>
+        <div class="session-pill" id="session-pill">Sin sesion</div>
+        <button class="ghost" id="logout-btn">Cerrar sesion</button>
+      </header>
+
+      <main>
+        <section class="section panels">
+          <div class="section-head">
+            <h2>Datos de la barberia</h2>
+            <p>Actualiza la informacion visible para tus clientes.</p>
+          </div>
+          <div class="panel-grid">
+            <div class="panel-card">
+              <form id="shop-details-form" class="form-grid">
+                <label>
+                  Nombre
+                  <input id="shop-name" type="text" required />
+                </label>
+                <label>
+                  Direccion
+                  <input id="shop-address" type="text" required />
+                </label>
+                <label>
+                  Descripcion
+                  <textarea id="shop-description" rows="3" placeholder="Opcional"></textarea>
+                </label>
+                <button class="cta full" type="submit">Guardar cambios</button>
+              </form>
+            </div>
+            <div class="panel-card">
+              <form id="shop-images-form" class="form-grid">
+                <p class="muted">Imagenes de la barberia (hasta 2)</p>
+                <div class="media-grid">
+                  <div class="media-card">
+                    <img id="shop-image-1-preview" class="is-hidden" alt="Imagen 1" />
+                    <label class="ghost">
+                      Cargar imagen 1
+                      <input id="shop-image-1" type="file" accept="image/*" />
+                    </label>
+                  </div>
+                  <div class="media-card">
+                    <img id="shop-image-2-preview" class="is-hidden" alt="Imagen 2" />
+                    <label class="ghost">
+                      Cargar imagen 2
+                      <input id="shop-image-2" type="file" accept="image/*" />
+                    </label>
+                  </div>
+                </div>
+                <button class="ghost full" type="submit">Guardar imagenes</button>
+              </form>
+            </div>
+          </div>
+          <p id="shop-config-message" class="form-message"></p>
+        </section>
+      </main>
+    </div>
+    <script src="shared.js"></script>
+    <script src="dueno-config.js"></script>
+  </body>
+</html>

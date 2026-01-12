@@ -17,6 +17,33 @@ const shopSearch = document.getElementById("shop-search");
 
 let cachedShops = [];
 let selectedSlot = "";
+let favoriteShopIds = new Set();
+
+function loadFavorites() {
+  try {
+    const raw = localStorage.getItem(`barberia_favs_${currentUser.id}`);
+    const ids = raw ? JSON.parse(raw) : [];
+    return new Set(ids.map((id) => String(id)));
+  } catch (error) {
+    return new Set();
+  }
+}
+
+function saveFavorites() {
+  const ids = Array.from(favoriteShopIds);
+  localStorage.setItem(`barberia_favs_${currentUser.id}`, JSON.stringify(ids));
+}
+
+function sortByFavorites(shops) {
+  return shops
+    .slice()
+    .sort((a, b) => {
+      const aFav = favoriteShopIds.has(String(a.id));
+      const bFav = favoriteShopIds.has(String(b.id));
+      if (aFav !== bFav) return aFav ? -1 : 1;
+      return a.name.localeCompare(b.name);
+    });
+}
 
 function createLogoData(name) {
   const canvas = document.createElement("canvas");
@@ -54,9 +81,16 @@ function getFilteredShops() {
   });
 }
 
+function formatPrice(price) {
+  if (price === null || price === undefined) return "";
+  const value = Number(price);
+  if (Number.isNaN(value)) return "";
+  return `$${value.toLocaleString("es-AR")}`;
+}
+
 function renderShopCards() {
   shopList.innerHTML = "";
-  const filtered = getFilteredShops();
+  const filtered = sortByFavorites(getFilteredShops());
   if (!filtered.length) {
     const empty = document.createElement("p");
     empty.className = "muted";
@@ -69,12 +103,35 @@ function renderShopCards() {
     button.type = "button";
     button.className = "shop-card";
     button.innerHTML = `
+      <button class="fav-toggle" type="button" aria-label="Marcar favorito">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 3.6l2.6 5.3 5.9.9-4.3 4.2 1 5.9-5.2-2.7-5.2 2.7 1-5.9L3.5 9.8l5.9-.9L12 3.6z" />
+        </svg>
+      </button>
       <img class="shop-logo" alt="Logo de ${shop.name}" />
       <div class="shop-meta">
         <h4>${shop.name}</h4>
         <p>${shop.address}</p>
       </div>
     `;
+    const favButton = button.querySelector(".fav-toggle");
+    if (favoriteShopIds.has(String(shop.id))) {
+      favButton.classList.add("is-fav");
+      favButton.setAttribute("aria-pressed", "true");
+    } else {
+      favButton.setAttribute("aria-pressed", "false");
+    }
+    favButton.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const key = String(shop.id);
+      if (favoriteShopIds.has(key)) {
+        favoriteShopIds.delete(key);
+      } else {
+        favoriteShopIds.add(key);
+      }
+      saveFavorites();
+      renderShopCards();
+    });
     const img = button.querySelector("img");
     img.src = shop.logo_url || createLogoData(shop.name);
     button.addEventListener("click", () => {
@@ -98,6 +155,7 @@ function updateBookingVisibility() {
 
 async function loadShops() {
   cachedShops = await fetchJSON("/api/shops");
+  favoriteShopIds = loadFavorites();
   renderShopCards();
   updateBookingVisibility();
 }
@@ -119,7 +177,11 @@ async function loadServices(shopId) {
     return;
   }
   const services = await fetchJSON(`/api/services?shopId=${shopId}`);
-  const options = services.map((service) => ({ label: service, value: service }));
+  const options = services.map((service) => {
+    const priceLabel = formatPrice(service.price);
+    const label = priceLabel ? `${service.name} (${priceLabel})` : service.name;
+    return { label, value: service.name };
+  });
   setOptions(bookingService, options, "Selecciona servicio");
 }
 
@@ -268,7 +330,15 @@ const today = getTodayISO();
 bookingDate.min = today;
 bookingDate.value = today;
 
-loadShops().catch(() => {
-  bookingMessage.textContent = "No se pudo conectar con el servidor.";
+function refreshClientData() {
+  loadShops().catch(() => {
+    bookingMessage.textContent = "No se pudo conectar con el servidor.";
+  });
+  loadClientAppointments();
+}
+
+window.addEventListener("pageshow", () => {
+  refreshClientData();
 });
-loadClientAppointments();
+
+refreshClientData();

@@ -5,7 +5,6 @@ const ownerBarber = document.getElementById("owner-barber");
 const ownerDate = document.getElementById("owner-date");
 const ownerAppointments = document.getElementById("owner-appointments");
 const ownerMessage = document.getElementById("owner-message");
-const ownerHistory = document.getElementById("owner-history");
 const ownerUserShop = document.getElementById("owner-user-shop");
 const ownerCreateForm = document.getElementById("owner-create-form");
 const ownerUserName = document.getElementById("owner-user-name");
@@ -22,6 +21,23 @@ const ownerLogoThumb = document.getElementById("owner-logo-thumb");
 const ownerLogoEdit = document.getElementById("owner-logo-edit");
 const ownerLogoZoom = document.getElementById("owner-logo-zoom");
 const ownerManageMessage = document.getElementById("owner-manage-message");
+const ownerRevenue = document.getElementById("owner-revenue");
+const ownerSales = document.getElementById("owner-sales");
+const ownerAvgTicket = document.getElementById("owner-avg-ticket");
+const ownerTopClient = document.getElementById("owner-top-client");
+const ownerTopTotal = document.getElementById("owner-top-total");
+const ownerSalesChart = document.getElementById("owner-sales-chart");
+const ownerStatsPeriod = document.getElementById("owner-stats-period");
+const statsFilter = document.getElementById("owner-stats-filter");
+const statsMonth = document.getElementById("stats-month");
+const statsFrom = document.getElementById("stats-from");
+const statsTo = document.getElementById("stats-to");
+const statsClear = document.getElementById("stats-clear");
+const ownerServiceForm = document.getElementById("owner-service-form");
+const ownerServiceName = document.getElementById("owner-service-name");
+const ownerServicePrice = document.getElementById("owner-service-price");
+const ownerServiceList = document.getElementById("owner-service-list");
+const ownerServiceMessage = document.getElementById("owner-service-message");
 const confirmModal = document.getElementById("confirm-modal");
 const confirmMessage = document.getElementById("confirm-message");
 const confirmCancel = document.getElementById("confirm-cancel");
@@ -115,6 +131,86 @@ async function loadBarbers() {
   if (options.length) ownerBarber.value = options[0].value;
 }
 
+async function loadServicesManage() {
+  if (!ownerServiceList) return;
+  ownerServiceList.innerHTML = "";
+  ownerServiceMessage.textContent = "";
+
+  try {
+    const rows = await fetchJSON(
+      `/api/services/manage?actorId=${currentUser.id}&shopId=${currentUser.shopId}`
+    );
+
+    if (!rows.length) {
+      const empty = document.createElement("p");
+      empty.className = "muted";
+      empty.textContent = "No hay servicios cargados.";
+      ownerServiceList.appendChild(empty);
+      return;
+    }
+
+    rows.forEach((service) => {
+      const row = document.createElement("div");
+      row.className = "service-item";
+      const priceValue = service.price === null || service.price === undefined ? "" : service.price;
+      row.innerHTML = `
+        <input type="text" value="${service.name}" />
+        <input type="number" min="0" step="0.01" value="${priceValue}" placeholder="Sin precio" />
+        <button class="ghost" type="button">Guardar</button>
+        <button class="ghost" type="button">Eliminar</button>
+      `;
+      const [nameInput, priceInput] = row.querySelectorAll("input");
+      const buttons = row.querySelectorAll("button");
+      const saveBtn = buttons[0];
+      const deleteBtn = buttons[1];
+
+      saveBtn.addEventListener("click", async () => {
+        ownerServiceMessage.textContent = "";
+        try {
+          const name = nameInput.value.trim();
+          const rawPrice = priceInput.value.trim();
+          const price = rawPrice === "" ? null : Number(rawPrice);
+          if (!name) {
+            showMessage(ownerServiceMessage, "El nombre es obligatorio.");
+            return;
+          }
+          await fetchJSON(`/api/services/${service.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              actorId: currentUser.id,
+              name,
+              price,
+            }),
+          });
+          showMessage(ownerServiceMessage, "Servicio actualizado.");
+        } catch (error) {
+          showMessage(ownerServiceMessage, error.message);
+        }
+      });
+
+      deleteBtn.addEventListener("click", async () => {
+        ownerServiceMessage.textContent = "";
+        try {
+          await fetchJSON(`/api/services/${service.id}`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ actorId: currentUser.id }),
+          });
+          showMessage(ownerServiceMessage, "Servicio eliminado.");
+          loadServicesManage();
+        } catch (error) {
+          showMessage(ownerServiceMessage, error.message);
+        }
+      });
+
+      ownerServiceList.appendChild(row);
+    });
+  } catch (error) {
+    showMessage(ownerServiceMessage, error.message);
+  }
+}
+
 async function refreshAgenda() {
   ownerAppointments.innerHTML = "";
   ownerMessage.textContent = "";
@@ -153,28 +249,86 @@ async function refreshAgenda() {
   }
 }
 
-async function loadHistory() {
-  ownerHistory.innerHTML = "";
-  const barberId = ownerBarber.value;
-  if (!barberId) return;
+function formatCurrency(value) {
+  const amount = Number(value || 0);
+  return new Intl.NumberFormat("es-AR", {
+    style: "currency",
+    currency: "ARS",
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
 
+function formatMonthLabel(month) {
+  if (!month) return "";
+  const [year, mm] = month.split("-");
+  const date = new Date(Number(year), Number(mm) - 1, 1);
+  return new Intl.DateTimeFormat("es-AR", { month: "long", year: "numeric" }).format(
+    date
+  );
+}
+
+function renderSalesChart(days) {
+  if (!ownerSalesChart) return;
+  ownerSalesChart.innerHTML = "";
+  const maxTotal = Math.max(...days.map((d) => d.total), 1);
+  days.forEach((day) => {
+    const item = document.createElement("div");
+    item.className = "chart-bar";
+    const bar = document.createElement("div");
+    bar.className = "bar-fill";
+    bar.style.height = `${Math.round((day.total / maxTotal) * 140) + 6}px`;
+    bar.title = `${day.date} | ${formatCurrency(day.total)} | ${day.count} ventas`;
+    const label = document.createElement("span");
+    label.className = "bar-day";
+    label.textContent = day.day;
+    item.appendChild(bar);
+    item.appendChild(label);
+    ownerSalesChart.appendChild(item);
+  });
+}
+
+function buildStatsQuery() {
+  const params = new URLSearchParams({
+    actorId: currentUser.id,
+    shopId: currentUser.shopId,
+  });
+  if (statsMonth?.value) {
+    params.append("month", statsMonth.value);
+  }
+  if (statsFrom?.value) {
+    params.append("from", statsFrom.value);
+  }
+  if (statsTo?.value) {
+    params.append("to", statsTo.value);
+  }
+  return params.toString();
+}
+
+async function loadOwnerStats() {
+  if (!ownerRevenue) return;
   try {
-    const rows = await fetchJSON(`/api/history/barber?barberId=${barberId}`);
-    if (!rows.length) {
-      const li = document.createElement("li");
-      li.textContent = "Sin historial cargado.";
-      ownerHistory.appendChild(li);
-      return;
+    const query = buildStatsQuery();
+    const stats = await fetchJSON(`/api/stats/owner?${query}`);
+    ownerRevenue.textContent = formatCurrency(stats.totals.revenue);
+    ownerSales.textContent = stats.totals.sales;
+    ownerAvgTicket.textContent = formatCurrency(stats.totals.avgTicket);
+    if (stats.topClient) {
+      ownerTopClient.textContent = stats.topClient.name;
+      ownerTopTotal.textContent = formatCurrency(stats.topClient.total);
+    } else {
+      ownerTopClient.textContent = "Sin datos";
+      ownerTopTotal.textContent = "";
     }
-    rows.forEach((row) => {
-      const li = document.createElement("li");
-      li.textContent = `${row.month} | ${row.total} cortes`;
-      ownerHistory.appendChild(li);
-    });
+    if (ownerStatsPeriod) {
+      ownerStatsPeriod.textContent = formatMonthLabel(stats.period.month);
+    }
+    renderSalesChart(stats.salesByDay);
   } catch (error) {
-    const li = document.createElement("li");
-    li.textContent = error.message;
-    ownerHistory.appendChild(li);
+    ownerRevenue.textContent = "-";
+    ownerSales.textContent = "-";
+    ownerAvgTicket.textContent = "-";
+    ownerTopClient.textContent = "Sin datos";
+    if (ownerStatsPeriod) ownerStatsPeriod.textContent = "";
   }
 }
 
@@ -339,6 +493,38 @@ if (logoApply) {
   });
 }
 
+if (ownerServiceForm) {
+  ownerServiceForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    ownerServiceMessage.textContent = "";
+
+    try {
+      const name = ownerServiceName.value.trim();
+      const rawPrice = ownerServicePrice.value.trim();
+      const price = rawPrice === "" ? null : Number(rawPrice);
+      if (!name) {
+        showMessage(ownerServiceMessage, "El nombre es obligatorio.");
+        return;
+      }
+      await fetchJSON("/api/services", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          actorId: currentUser.id,
+          name,
+          price,
+          shopId: currentUser.shopId,
+        }),
+      });
+      ownerServiceForm.reset();
+      showMessage(ownerServiceMessage, "Servicio agregado.");
+      loadServicesManage();
+    } catch (error) {
+      showMessage(ownerServiceMessage, error.message);
+    }
+  });
+}
+
 if (logoModal) {
   logoModal.addEventListener("click", (event) => {
     if (event.target === logoModal) {
@@ -355,7 +541,6 @@ window.addEventListener("keydown", (event) => {
 
 ownerBarber.addEventListener("change", async () => {
   await refreshAgenda();
-  await loadHistory();
 });
 ownerDate.addEventListener("change", refreshAgenda);
 
@@ -381,5 +566,38 @@ ownerDate.value = today;
 loadOwnerShopName();
 loadBarbers().then(() => {
   refreshAgenda();
-  loadHistory();
+});
+loadServicesManage();
+loadOwnerStats();
+
+if (statsFilter) {
+  statsFilter.addEventListener("submit", (event) => {
+    event.preventDefault();
+    loadOwnerStats();
+  });
+}
+
+if (statsClear) {
+  statsClear.addEventListener("click", () => {
+    if (statsMonth) statsMonth.value = "";
+    if (statsFrom) statsFrom.value = "";
+    if (statsTo) statsTo.value = "";
+    loadOwnerStats();
+  });
+}
+
+function openStatsPicker(event) {
+  const input = event.currentTarget?.querySelector("input");
+  if (!input) return;
+  if (typeof input.showPicker === "function") {
+    input.showPicker();
+    return;
+  }
+  input.focus();
+  input.click();
+}
+
+const statsDateFields = statsFilter?.querySelectorAll(".date-field") || [];
+statsDateFields.forEach((field) => {
+  field.addEventListener("click", openStatsPicker);
 });

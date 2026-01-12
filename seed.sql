@@ -19,7 +19,7 @@ INSERT INTO barber_slots (barber_id, time) VALUES
 (1, '17:00'),
 (1, '18:30');
 
-INSERT INTO shop_services (shop_id, name) VALUES
-(1, 'Corte clasico'),
-(1, 'Fade'),
-(1, 'Barba premium');
+INSERT INTO shop_services (shop_id, name, price) VALUES
+(1, 'Corte clasico', 2500),
+(1, 'Fade', 2800),
+(1, 'Barba premium', 2200);

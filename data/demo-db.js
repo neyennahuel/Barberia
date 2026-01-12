@@ -23,9 +23,33 @@ function seedState() {
       appointments: 1,
     },
     shops: [
-      { id: 1, name: "Distrito 17", address: "Av. Central 1240", logo_url: null },
-      { id: 2, name: "Norte 5", address: "Av. Libertad 450", logo_url: null },
-      { id: 3, name: "Sur 23", address: "Calle Mitre 2100", logo_url: null },
+      {
+        id: 1,
+        name: "Distrito 17",
+        address: "Av. Central 1240",
+        description: null,
+        logo_url: null,
+        image_url_1: null,
+        image_url_2: null,
+      },
+      {
+        id: 2,
+        name: "Norte 5",
+        address: "Av. Libertad 450",
+        description: null,
+        logo_url: null,
+        image_url_1: null,
+        image_url_2: null,
+      },
+      {
+        id: 3,
+        name: "Sur 23",
+        address: "Calle Mitre 2100",
+        description: null,
+        logo_url: null,
+        image_url_1: null,
+        image_url_2: null,
+      },
     ],
     users: [
       { id: 1, username: "admin", password: "admin123", name: "Administrador", role: "admin", shop_id: null },
@@ -66,15 +90,15 @@ function seedState() {
       { id: 21, barber_id: 3, time: "18:30" },
     ],
     shop_services: [
-      { id: 1, shop_id: 1, name: "Corte clasico" },
-      { id: 2, shop_id: 1, name: "Fade" },
-      { id: 3, shop_id: 1, name: "Barba premium" },
-      { id: 4, shop_id: 2, name: "Corte moderno" },
-      { id: 5, shop_id: 2, name: "Barba express" },
-      { id: 6, shop_id: 2, name: "Color discreto" },
-      { id: 7, shop_id: 3, name: "Corte clasico" },
-      { id: 8, shop_id: 3, name: "Perfilado" },
-      { id: 9, shop_id: 3, name: "Lavado premium" },
+      { id: 1, shop_id: 1, name: "Corte clasico", price: 2500 },
+      { id: 2, shop_id: 1, name: "Fade", price: 2800 },
+      { id: 3, shop_id: 1, name: "Barba premium", price: 2200 },
+      { id: 4, shop_id: 2, name: "Corte moderno", price: 2600 },
+      { id: 5, shop_id: 2, name: "Barba express", price: 2000 },
+      { id: 6, shop_id: 2, name: "Color discreto", price: 3000 },
+      { id: 7, shop_id: 3, name: "Corte clasico", price: 2400 },
+      { id: 8, shop_id: 3, name: "Perfilado", price: 2100 },
+      { id: 9, shop_id: 3, name: "Lavado premium", price: 1900 },
     ],
     appointments: [],
   };
@@ -129,6 +153,10 @@ function createDemoDb(options = {}) {
     userRoleById: "SELECT role FROM users WHERE id = $1",
     userByIdWithShop: "SELECT id, role, shop_id as shopId FROM users WHERE id = $1",
     updateShopLogo: "UPDATE shops SET logo_url = $1 WHERE id = $2",
+    shopById: "SELECT id, name, address, description, logo_url as logoUrl, image_url_1 as imageUrl1, image_url_2 as imageUrl2 FROM shops WHERE id = $1",
+    updateShopDetails: "UPDATE shops SET name = $1, address = $2, description = $3 WHERE id = $4",
+    updateShopImages: "UPDATE shops SET image_url_1 = $1, image_url_2 = $2 WHERE id = $3",
+    shopImagesById: "SELECT image_url_1 as imageUrl1, image_url_2 as imageUrl2 FROM shops WHERE id = $1",
     insertUser: `INSERT INTO users (username, password, name, role, shop_id)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING id, username, name, role, shop_id as shopId`,
@@ -146,7 +174,12 @@ function createDemoDb(options = {}) {
        JOIN users ON users.id = barbers.user_id
        WHERE barbers.shop_id = $1
        ORDER BY users.name`,
-    servicesByShop: "SELECT name FROM shop_services WHERE shop_id = $1 ORDER BY name",
+    servicesByShop: "SELECT name, price FROM shop_services WHERE shop_id = $1 ORDER BY name",
+    servicesManageByShop: "SELECT id, name, price FROM shop_services WHERE shop_id = $1 ORDER BY name",
+    insertService: "INSERT INTO shop_services (shop_id, name, price) VALUES ($1, $2, $3) RETURNING id, name, price",
+    updateService: "UPDATE shop_services SET name = $1, price = $2 WHERE id = $3",
+    serviceById: "SELECT id, shop_id as shopId FROM shop_services WHERE id = $1",
+    deleteService: "DELETE FROM shop_services WHERE id = $1",
     slotsByBarber: "SELECT time FROM barber_slots WHERE barber_id = $1 ORDER BY time",
     bookedSlots: "SELECT time FROM appointments WHERE barber_id = $1 AND date = $2",
     barberById: "SELECT id, shop_id as shopId, user_id as userId FROM barbers WHERE id = $1",
@@ -161,8 +194,8 @@ function createDemoDb(options = {}) {
        ORDER BY appointments.time`,
     slotByBarberTime: "SELECT id FROM barber_slots WHERE barber_id = $1 AND time = $2",
     existingAppointment: "SELECT id FROM appointments WHERE barber_id = $1 AND date = $2 AND time = $3",
-    insertAppointment: `INSERT INTO appointments (shop_id, barber_id, client_id, date, time, service)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
+    insertAppointment: `INSERT INTO appointments (shop_id, barber_id, client_id, date, time, service, service_price)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
     deleteOldAppointments: "DELETE FROM appointments WHERE date < $1",
     appointmentsByClient: `SELECT appointments.id,
               appointments.date,
@@ -191,6 +224,19 @@ function createDemoDb(options = {}) {
        ORDER BY month DESC
        LIMIT 6`,
     statsByMonth: "SELECT COUNT(*)::int as total FROM appointments WHERE substr(date, 1, 7) = $1",
+    servicesByShopWithPrice: "SELECT name, price FROM shop_services WHERE shop_id = $1",
+    appointmentsByShopDateRange: `SELECT appointments.id,
+              appointments.date,
+              appointments.service,
+              appointments.service_price as servicePrice,
+              appointments.client_id as clientId,
+              users.name as clientName
+       FROM appointments
+       JOIN users ON users.id = appointments.client_id
+       WHERE appointments.shop_id = $1
+         AND appointments.date >= $2
+         AND appointments.date <= $3
+       ORDER BY appointments.date`,
     userByUsername: "SELECT id FROM users WHERE username = $1",
     userByUsernameRole: "SELECT id, role FROM users WHERE username = $1",
     convertUser: "UPDATE users SET role = 'peluquero', shop_id = $1 WHERE id = $2",
@@ -233,7 +279,15 @@ function createDemoDb(options = {}) {
   handle(SQL.insertShop, (params) => {
     const [name, address] = params;
     const id = nextId("shops");
-    state.shops.push({ id, name, address, logo_url: null });
+    state.shops.push({
+      id,
+      name,
+      address,
+      description: null,
+      logo_url: null,
+      image_url_1: null,
+      image_url_2: null,
+    });
     persist();
     return { rows: [{ id, name, address }] };
   });
@@ -262,6 +316,64 @@ function createDemoDb(options = {}) {
       persist();
     }
     return { rows: [] };
+  });
+
+  handle(SQL.shopById, (params) => {
+    const shopId = toId(params[0]);
+    const shop = state.shops.find((item) => item.id === shopId);
+    return {
+      rows: shop
+        ? [
+            {
+              id: shop.id,
+              name: shop.name,
+              address: shop.address,
+              description: shop.description || null,
+              logoUrl: shop.logo_url || null,
+              imageUrl1: shop.image_url_1 || null,
+              imageUrl2: shop.image_url_2 || null,
+            },
+          ]
+        : [],
+    };
+  });
+
+  handle(SQL.updateShopDetails, (params) => {
+    const [name, address, description, shopId] = params;
+    const shop = state.shops.find((item) => item.id === toId(shopId));
+    if (shop) {
+      shop.name = name;
+      shop.address = address;
+      shop.description = description || null;
+      persist();
+    }
+    return { rows: [] };
+  });
+
+  handle(SQL.updateShopImages, (params) => {
+    const [image1, image2, shopId] = params;
+    const shop = state.shops.find((item) => item.id === toId(shopId));
+    if (shop) {
+      shop.image_url_1 = image1 || shop.image_url_1 || null;
+      shop.image_url_2 = image2 || shop.image_url_2 || null;
+      persist();
+    }
+    return { rows: [] };
+  });
+
+  handle(SQL.shopImagesById, (params) => {
+    const shopId = toId(params[0]);
+    const shop = state.shops.find((item) => item.id === shopId);
+    return {
+      rows: shop
+        ? [
+            {
+              imageUrl1: shop.image_url_1 || null,
+              imageUrl2: shop.image_url_2 || null,
+            },
+          ]
+        : [],
+    };
   });
 
   handle(SQL.insertUser, (params) => {
@@ -331,9 +443,70 @@ function createDemoDb(options = {}) {
     const shopId = toId(params[0]);
     const rows = state.shop_services
       .filter((item) => item.shop_id === shopId)
-      .map((item) => ({ name: item.name }))
+      .map((item) => ({ name: item.name, price: item.price ?? null }))
       .sort((a, b) => a.name.localeCompare(b.name));
     return { rows };
+  });
+
+  handle(SQL.servicesManageByShop, (params) => {
+    const shopId = toId(params[0]);
+    const rows = state.shop_services
+      .filter((item) => item.shop_id === shopId)
+      .map((item) => ({ id: item.id, name: item.name, price: item.price || 0 }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    return { rows };
+  });
+
+  handle(SQL.insertService, (params) => {
+    const [shopId, name, price] = params;
+    const id = nextId("shop_services");
+    state.shop_services.push({
+      id,
+      shop_id: toId(shopId),
+      name,
+      price: price === null || price === undefined ? null : Number(price),
+    });
+    persist();
+    return {
+      rows: [
+        {
+          id,
+          name,
+          price: price === null || price === undefined ? null : Number(price),
+        },
+      ],
+    };
+  });
+
+  handle(SQL.updateService, (params) => {
+    const [name, price, serviceId] = params;
+    const service = state.shop_services.find((item) => item.id === toId(serviceId));
+    if (service) {
+      service.name = name;
+      service.price = price === null || price === undefined ? null : Number(price);
+      persist();
+    }
+    return { rows: [] };
+  });
+
+  handle(SQL.serviceById, (params) => {
+    const serviceId = toId(params[0]);
+    const service = state.shop_services.find((item) => item.id === serviceId);
+    return {
+      rows: service
+        ? [{ id: service.id, shopId: service.shop_id }]
+        : [],
+    };
+  });
+
+  handle(SQL.deleteService, (params) => {
+    const serviceId = toId(params[0]);
+    const before = state.shop_services.length;
+    state.shop_services = state.shop_services.filter((item) => item.id !== serviceId);
+    if (state.shop_services.length !== before) {
+      persist();
+    }
+    return { rows: [] };
   });
 
   handle(SQL.barberById, (params) => {
@@ -454,6 +627,7 @@ function createDemoDb(options = {}) {
     const date = params[3];
     const time = params[4];
     const service = params[5];
+    const servicePrice = params[6];
     state.appointments.push({
       id: nextId("appointments"),
       shop_id: shopId,
@@ -462,6 +636,7 @@ function createDemoDb(options = {}) {
       date,
       time,
       service,
+      service_price: servicePrice === undefined ? null : servicePrice,
       created_at: new Date().toISOString(),
     });
     persist();
@@ -557,6 +732,38 @@ function createDemoDb(options = {}) {
     const month = params[0];
     const total = state.appointments.filter((item) => item.date.slice(0, 7) === month).length;
     return { rows: [{ total }] };
+  });
+
+  handle(SQL.servicesByShopWithPrice, (params) => {
+    const shopId = toId(params[0]);
+    const rows = state.shop_services
+      .filter((item) => item.shop_id === shopId)
+      .map((item) => ({ name: item.name, price: item.price ?? null }));
+    return { rows };
+  });
+
+  handle(SQL.appointmentsByShopDateRange, (params) => {
+    const shopId = toId(params[0]);
+    const from = params[1];
+    const to = params[2];
+    const rows = state.appointments
+      .filter(
+        (item) =>
+          item.shop_id === shopId && item.date >= from && item.date <= to
+      )
+      .sort((a, b) => (a.date === b.date ? a.time.localeCompare(b.time) : a.date.localeCompare(b.date)))
+      .map((item) => {
+        const client = state.users.find((user) => user.id === item.client_id);
+        return {
+          id: item.id,
+          date: item.date,
+          service: item.service,
+          servicePrice: item.service_price ?? null,
+          clientId: item.client_id,
+          clientName: client ? client.name : "",
+        };
+      });
+    return { rows };
   });
 
   handle(SQL.convertUser, (params) => {

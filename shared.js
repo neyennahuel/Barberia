@@ -151,13 +151,16 @@ function createCropper({ input, canvas, zoom, message }) {
       exportCanvas.width = size;
       exportCanvas.height = size;
       const exportCtx = exportCanvas.getContext("2d");
-      const scale = state.baseScale * state.zoom;
+      const scaleFactor = size / canvas.width;
+      const scale = state.baseScale * state.zoom * scaleFactor;
       const width = state.image.width * scale;
       const height = state.image.height * scale;
+      const offsetX = state.offsetX * scaleFactor;
+      const offsetY = state.offsetY * scaleFactor;
       exportCtx.drawImage(
         state.image,
-        state.offsetX,
-        state.offsetY,
+        offsetX,
+        offsetY,
         width,
         height
       );

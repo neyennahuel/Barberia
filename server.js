@@ -6,6 +6,7 @@ const { dbAll, dbGet, dbRun } = require("./data/db");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const TZ = "America/Argentina/Mendoza";
 
 const UPLOAD_DIR = path.join(__dirname, "uploads");
 if (!fs.existsSync(UPLOAD_DIR)) {
@@ -40,6 +41,79 @@ function isPastDate(dateStr) {
 function timeToMinutes(timeStr) {
   const [hours, minutes] = timeStr.split(":").map(Number);
   return hours * 60 + minutes;
+}
+
+function getTZDateParts(date) {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: TZ,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  const parts = formatter.formatToParts(date);
+  return parts.reduce((acc, part) => {
+    if (part.type === "year") acc.year = part.value;
+    if (part.type === "month") acc.month = part.value;
+    if (part.type === "day") acc.day = part.value;
+    return acc;
+  }, {});
+}
+
+function getCurrentMonth() {
+  const parts = getTZDateParts(new Date());
+  return `${parts.year}-${parts.month}`;
+}
+
+function daysInMonth(year, month) {
+  return new Date(Date.UTC(year, month, 0)).getUTCDate();
+}
+
+function getMonthBounds(month) {
+  const match = /^(\d{4})-(\d{2})$/.exec(month || "");
+  if (!match) return null;
+  const year = Number(match[1]);
+  const mm = Number(match[2]);
+  if (mm < 1 || mm > 12) return null;
+  const lastDay = daysInMonth(year, mm);
+  const start = `${match[1]}-${match[2]}-01`;
+  const end = `${match[1]}-${match[2]}-${String(lastDay).padStart(2, "0")}`;
+  return { start, end, month: `${match[1]}-${match[2]}` };
+}
+
+function isoToTzDateString(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  const parts = getTZDateParts(date);
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
+
+function resolveDateRange({ month, from, to }) {
+  if (from || to) {
+    const start = isoToTzDateString(from || to);
+    const end = isoToTzDateString(to || from);
+    if (!start || !end) return null;
+    if (start > end) return null;
+    return { start, end, month: start.slice(0, 7) };
+  }
+  const bounds = getMonthBounds(month || getCurrentMonth());
+  return bounds ? { start: bounds.start, end: bounds.end, month: bounds.month } : null;
+}
+
+function enumerateDays(start, end) {
+  const [sy, sm, sd] = start.split("-").map(Number);
+  const [ey, em, ed] = end.split("-").map(Number);
+  const cursor = new Date(Date.UTC(sy, sm - 1, sd));
+  const last = new Date(Date.UTC(ey, em - 1, ed));
+  const days = [];
+  while (cursor <= last) {
+    const yyyy = String(cursor.getUTCFullYear());
+    const mm = String(cursor.getUTCMonth() + 1).padStart(2, "0");
+    const dd = String(cursor.getUTCDate()).padStart(2, "0");
+    days.push(`${yyyy}-${mm}-${dd}`);
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+  return days;
 }
 
 function isPastTimeForDate(dateStr, timeStr) {
@@ -95,6 +169,162 @@ app.get(
       "SELECT id, name, address, logo_url FROM shops ORDER BY name"
     );
     res.json(shops);
+  })
+);
+
+app.get(
+  "/api/shops/:id",
+  asyncHandler(async (req, res) => {
+    const { actorId } = req.query;
+    const shopId = req.params.id;
+    if (!actorId) {
+      return res.status(400).json({ error: "Falta actorId." });
+    }
+
+    const actor = await dbGet(
+      "SELECT id, role, shop_id as shopId FROM users WHERE id = $1",
+      [actorId]
+    );
+    if (!actor) {
+      return res.status(403).json({ error: "Sin permisos." });
+    }
+
+    const isAdmin = actor.role === "admin";
+    const isOwner = actor.role === "dueno" && String(actor.shopId) === String(shopId);
+    if (!isAdmin && !isOwner) {
+      return res.status(403).json({ error: "Sin permisos." });
+    }
+
+    const shop = await dbGet(
+      `SELECT id,
+              name,
+              address,
+              description,
+              logo_url as logoUrl,
+              image_url_1 as imageUrl1,
+              image_url_2 as imageUrl2
+       FROM shops
+       WHERE id = $1`,
+      [shopId]
+    );
+
+    if (!shop) {
+      return res.status(404).json({ error: "Peluqueria no encontrada." });
+    }
+
+    res.json(shop);
+  })
+);
+
+app.put(
+  "/api/shops/:id",
+  asyncHandler(async (req, res) => {
+    const { actorId, name, address, description } = req.body || {};
+    const shopId = req.params.id;
+    if (!actorId || !name || !address) {
+      return res.status(400).json({ error: "Faltan datos." });
+    }
+
+    const actor = await dbGet(
+      "SELECT id, role, shop_id as shopId FROM users WHERE id = $1",
+      [actorId]
+    );
+    if (!actor) {
+      return res.status(403).json({ error: "Sin permisos." });
+    }
+
+    const isAdmin = actor.role === "admin";
+    const isOwner = actor.role === "dueno" && String(actor.shopId) === String(shopId);
+    if (!isAdmin && !isOwner) {
+      return res.status(403).json({ error: "Sin permisos." });
+    }
+
+    await dbRun(
+      "UPDATE shops SET name = $1, address = $2, description = $3 WHERE id = $4",
+      [name, address, description || null, shopId]
+    );
+
+    res.json({ ok: true });
+  })
+);
+
+app.post(
+  "/api/shops/images",
+  upload.fields([
+    { name: "image1", maxCount: 1 },
+    { name: "image2", maxCount: 1 },
+  ]),
+  asyncHandler(async (req, res) => {
+    const { actorId, shopId } = req.body || {};
+    if (!actorId) {
+      return res.status(400).json({ error: "Falta actorId." });
+    }
+
+    const actor = await dbGet(
+      "SELECT id, role, shop_id as shopId FROM users WHERE id = $1",
+      [actorId]
+    );
+
+    if (!actor) {
+      return res.status(403).json({ error: "Sin permisos." });
+    }
+
+    const isAdmin = actor.role === "admin";
+    const isOwner = actor.role === "dueno";
+    if (!isAdmin && !isOwner) {
+      return res.status(403).json({ error: "Sin permisos." });
+    }
+
+    const targetShopId = isOwner ? actor.shopId : shopId;
+    if (!targetShopId) {
+      return res.status(400).json({ error: "Falta peluqueria." });
+    }
+
+    const files = req.files || {};
+    const file1 = files.image1?.[0];
+    const file2 = files.image2?.[0];
+
+    if (!file1 && !file2) {
+      return res.status(400).json({ error: "No hay imagenes." });
+    }
+
+    const current = await dbGet(
+      "SELECT image_url_1 as imageUrl1, image_url_2 as imageUrl2 FROM shops WHERE id = $1",
+      [targetShopId]
+    );
+
+    let imageUrl1 = current?.imageUrl1 || null;
+    let imageUrl2 = current?.imageUrl2 || null;
+
+    if (file1) {
+      const ext = path.extname(file1.originalname) || ".png";
+      const filename = `shop-${targetShopId}-img1-${Date.now()}${ext}`;
+      const finalPath = path.join(UPLOAD_DIR, filename);
+      fs.renameSync(file1.path, finalPath);
+      imageUrl1 = `/uploads/${filename}`;
+    }
+
+    if (file2) {
+      const ext = path.extname(file2.originalname) || ".png";
+      const filename = `shop-${targetShopId}-img2-${Date.now()}${ext}`;
+      const finalPath = path.join(UPLOAD_DIR, filename);
+      fs.renameSync(file2.path, finalPath);
+      imageUrl2 = `/uploads/${filename}`;
+    }
+
+    await dbRun(
+      "UPDATE shops SET image_url_1 = $1, image_url_2 = $2 WHERE id = $3",
+      [imageUrl1, imageUrl2, targetShopId]
+    );
+
+    const shop = await dbGet(
+      `SELECT image_url_1 as imageUrl1, image_url_2 as imageUrl2
+       FROM shops
+       WHERE id = $1`,
+      [targetShopId]
+    );
+
+    res.json(shop);
   })
 );
 
@@ -316,11 +546,151 @@ app.get(
     if (!shopId) return res.status(400).json({ error: "Falta shopId" });
 
     const rows = await dbAll(
-      "SELECT name FROM shop_services WHERE shop_id = $1 ORDER BY name",
+      "SELECT name, price FROM shop_services WHERE shop_id = $1 ORDER BY name",
       [shopId]
     );
 
-    res.json(rows.map((row) => row.name));
+    res.json(rows);
+  })
+);
+
+app.get(
+  "/api/services/manage",
+  asyncHandler(async (req, res) => {
+    const { actorId, shopId } = req.query;
+    if (!actorId) return res.status(400).json({ error: "Falta actorId" });
+
+    const actor = await dbGet(
+      "SELECT id, role, shop_id as shopId FROM users WHERE id = $1",
+      [actorId]
+    );
+    if (!actor) return res.status(403).json({ error: "Sin permisos." });
+
+    const isAdmin = actor.role === "admin";
+    const isOwner = actor.role === "dueno";
+    const targetShopId = isOwner ? actor.shopId : shopId;
+    if (!targetShopId) return res.status(400).json({ error: "Falta shopId" });
+
+    if (!isAdmin && !isOwner) {
+      return res.status(403).json({ error: "Sin permisos." });
+    }
+
+    const rows = await dbAll(
+      "SELECT id, name, price FROM shop_services WHERE shop_id = $1 ORDER BY name",
+      [targetShopId]
+    );
+
+    res.json(rows);
+  })
+);
+
+app.post(
+  "/api/services",
+  asyncHandler(async (req, res) => {
+    const { actorId, name, price, shopId } = req.body || {};
+    if (!actorId || !name) {
+      return res.status(400).json({ error: "Faltan datos." });
+    }
+
+    const actor = await dbGet(
+      "SELECT id, role, shop_id as shopId FROM users WHERE id = $1",
+      [actorId]
+    );
+    if (!actor) return res.status(403).json({ error: "Sin permisos." });
+
+    const isAdmin = actor.role === "admin";
+    const isOwner = actor.role === "dueno";
+    if (!isAdmin && !isOwner) {
+      return res.status(403).json({ error: "Sin permisos." });
+    }
+
+    const targetShopId = isOwner ? actor.shopId : shopId;
+    if (!targetShopId) {
+      return res.status(400).json({ error: "Falta peluqueria." });
+    }
+
+    const normalizedPrice =
+      price === null || price === undefined || price === "" ? null : Number(price);
+
+    const created = await dbGet(
+      `INSERT INTO shop_services (shop_id, name, price)
+       VALUES ($1, $2, $3)
+       RETURNING id, name, price`,
+      [targetShopId, name, normalizedPrice]
+    );
+
+    res.json(created);
+  })
+);
+
+app.put(
+  "/api/services/:id",
+  asyncHandler(async (req, res) => {
+    const { actorId, name, price } = req.body || {};
+    const serviceId = req.params.id;
+    if (!actorId || !name) {
+      return res.status(400).json({ error: "Faltan datos." });
+    }
+
+    const actor = await dbGet(
+      "SELECT id, role, shop_id as shopId FROM users WHERE id = $1",
+      [actorId]
+    );
+    if (!actor) return res.status(403).json({ error: "Sin permisos." });
+
+    const service = await dbGet(
+      "SELECT id, shop_id as shopId FROM shop_services WHERE id = $1",
+      [serviceId]
+    );
+    if (!service) return res.status(404).json({ error: "Servicio no encontrado." });
+
+    const isAdmin = actor.role === "admin";
+    const isOwner = actor.role === "dueno" && actor.shopId === service.shopId;
+    if (!isAdmin && !isOwner) {
+      return res.status(403).json({ error: "Sin permisos." });
+    }
+
+    const normalizedPrice =
+      price === null || price === undefined || price === "" ? null : Number(price);
+
+    await dbRun(
+      "UPDATE shop_services SET name = $1, price = $2 WHERE id = $3",
+      [name, normalizedPrice, serviceId]
+    );
+
+    res.json({ ok: true });
+  })
+);
+
+app.delete(
+  "/api/services/:id",
+  asyncHandler(async (req, res) => {
+    const { actorId } = req.body || {};
+    const serviceId = req.params.id;
+    if (!actorId) {
+      return res.status(400).json({ error: "Falta actorId." });
+    }
+
+    const actor = await dbGet(
+      "SELECT id, role, shop_id as shopId FROM users WHERE id = $1",
+      [actorId]
+    );
+    if (!actor) return res.status(403).json({ error: "Sin permisos." });
+
+    const service = await dbGet(
+      "SELECT id, shop_id as shopId FROM shop_services WHERE id = $1",
+      [serviceId]
+    );
+    if (!service) return res.status(404).json({ error: "Servicio no encontrado." });
+
+    const isAdmin = actor.role === "admin";
+    const isOwner = actor.role === "dueno" && actor.shopId === service.shopId;
+    if (!isAdmin && !isOwner) {
+      return res.status(403).json({ error: "Sin permisos." });
+    }
+
+    await dbRun("DELETE FROM shop_services WHERE id = $1", [serviceId]);
+    res.json({ ok: true });
   })
 );
 
@@ -414,10 +784,20 @@ app.post(
       return res.status(409).json({ error: "Horario ocupado" });
     }
 
+    const serviceName = service || "Corte";
+    const serviceRow = await dbGet(
+      "SELECT price FROM shop_services WHERE shop_id = $1 AND name = $2",
+      [shopId, serviceName]
+    );
+    const servicePrice =
+      serviceRow?.price === null || serviceRow?.price === undefined
+        ? null
+        : Number(serviceRow.price);
+
     await dbRun(
-      `INSERT INTO appointments (shop_id, barber_id, client_id, date, time, service)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
-      [shopId, barberId, clientId, date, time, service || "Corte"]
+      `INSERT INTO appointments (shop_id, barber_id, client_id, date, time, service, service_price)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [shopId, barberId, clientId, date, time, serviceName, servicePrice]
     );
 
     res.json({ ok: true });
@@ -532,6 +912,125 @@ app.get(
       [month]
     );
     res.json({ total: row?.total || 0, month });
+  })
+);
+
+app.get(
+  "/api/stats/owner",
+  asyncHandler(async (req, res) => {
+    const { actorId, shopId, month, from, to } = req.query;
+    if (!actorId) {
+      return res.status(400).json({ error: "Falta actorId." });
+    }
+
+    const actor = await dbGet(
+      "SELECT id, role, shop_id as shopId FROM users WHERE id = $1",
+      [actorId]
+    );
+    if (!actor) {
+      return res.status(403).json({ error: "Sin permisos." });
+    }
+
+    const isAdmin = actor.role === "admin";
+    const isOwner = actor.role === "dueno";
+    if (!isAdmin && !isOwner) {
+      return res.status(403).json({ error: "Sin permisos." });
+    }
+
+    const targetShopId = isOwner ? actor.shopId : shopId;
+    if (!targetShopId) {
+      return res.status(400).json({ error: "Falta peluqueria." });
+    }
+
+    const range = resolveDateRange({ month, from, to });
+    if (!range) {
+      return res.status(400).json({ error: "Rango de fechas invalido." });
+    }
+
+    const appointments = await dbAll(
+      `SELECT appointments.id,
+              appointments.date,
+              appointments.service,
+              appointments.service_price as servicePrice,
+              appointments.client_id as clientId,
+              users.name as clientName
+       FROM appointments
+       JOIN users ON users.id = appointments.client_id
+       WHERE appointments.shop_id = $1
+         AND appointments.date >= $2
+         AND appointments.date <= $3
+       ORDER BY appointments.date`,
+      [targetShopId, range.start, range.end]
+    );
+
+    const services = await dbAll(
+      "SELECT name, price FROM shop_services WHERE shop_id = $1",
+      [targetShopId]
+    );
+    const priceMap = new Map(
+      services.map((item) => [item.name, item.price === null ? 0 : Number(item.price)])
+    );
+
+    let revenue = 0;
+    const sales = appointments.length;
+    const perClient = new Map();
+    const perDay = new Map();
+
+    appointments.forEach((item) => {
+      const price =
+        item.servicePrice === null || item.servicePrice === undefined
+          ? priceMap.get(item.service) || 0
+          : Number(item.servicePrice);
+      revenue += price;
+      const clientKey = String(item.clientId);
+      const current = perClient.get(clientKey) || {
+        id: item.clientId,
+        name: item.clientName,
+        total: 0,
+      };
+      current.total += price;
+      perClient.set(clientKey, current);
+      const dayKey = item.date;
+      const dayData = perDay.get(dayKey) || { total: 0, count: 0 };
+      dayData.total += price;
+      dayData.count += 1;
+      perDay.set(dayKey, dayData);
+    });
+
+    const avgTicket = sales ? revenue / sales : 0;
+    let topClient = null;
+    perClient.forEach((value) => {
+      if (!topClient || value.total > topClient.total) {
+        topClient = value;
+      }
+    });
+
+    const days = enumerateDays(range.start, range.end).map((date) => {
+      const data = perDay.get(date) || { total: 0, count: 0 };
+      return {
+        date,
+        day: Number(date.slice(-2)),
+        total: data.total,
+        count: data.count,
+      };
+    });
+
+    res.json({
+      period: {
+        start: range.start,
+        end: range.end,
+        month: range.month,
+      },
+      totals: {
+        revenue,
+        sales,
+        avgTicket,
+      },
+      topClient: topClient
+        ? { id: topClient.id, name: topClient.name, total: topClient.total }
+        : null,
+      salesByDay: days,
+    });
   })
 );
 

@@ -20,117 +20,215 @@
           <a href="#agenda">Agenda</a>
           <a href="#trayectoria">Trayectoria</a>
           <a href="#gestion">Gestion</a>
+          <a href="#gestion-peluqueria">Gestion peluqueria</a>
         </nav>
         <div class="session-pill" id="session-pill">Sin sesion</div>
+        <a class="icon-link" href="dueno-config.html" aria-label="Configurar barberia">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M12 8.7a3.3 3.3 0 1 0 0 6.6 3.3 3.3 0 0 0 0-6.6Zm8.2 3.3a6.9 6.9 0 0 0-.1-1.1l2-1.6-2-3.5-2.4.9a7 7 0 0 0-1.9-1.1l-.4-2.5H9.6l-.4 2.5a7 7 0 0 0-1.9 1.1l-2.4-.9-2 3.5 2 1.6a7.5 7.5 0 0 0 0 2.2l-2 1.6 2 3.5 2.4-.9c.6.5 1.2.9 1.9 1.1l.4 2.5h4.8l.4-2.5c.7-.2 1.3-.6 1.9-1.1l2.4.9 2-3.5-2-1.6c.1-.4.1-.8.1-1.1Z"
+            />
+          </svg>
+        </a>
         <button class="ghost" id="logout-btn">Cerrar sesion</button>
       </header>
 
       <main>
         <section class="section panels" id="agenda">
-          <div class="section-head">
-            <h2>Agenda</h2>
-            <p>Selecciona un peluquero para ver sus turnos.</p>
-          </div>
-          <div class="panel-grid">
-            <div class="panel-card">
-              <div class="form-grid">
-                <label>
-                  Peluquero
-                  <select id="owner-barber"></select>
-                </label>
-                <label class="date-field">
-                  Fecha
-                  <input id="owner-date" type="date" />
-                </label>
-                <ul class="list" id="owner-appointments"></ul>
-                <p id="owner-message" class="form-message"></p>
+          <details class="section-toggle">
+            <summary class="section-summary">
+              <div>
+                <h2>Agenda</h2>
+                <p>Selecciona un peluquero para ver sus turnos.</p>
+              </div>
+            </summary>
+            <div class="section-body">
+              <div class="panel-grid">
+                <div class="panel-card">
+                  <div class="form-grid">
+                    <label>
+                      Peluquero
+                      <select id="owner-barber"></select>
+                    </label>
+                    <label class="date-field">
+                      Fecha
+                      <input id="owner-date" type="date" />
+                    </label>
+                    <ul class="list" id="owner-appointments"></ul>
+                    <p id="owner-message" class="form-message"></p>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+          </details>
         </section>
 
         <section class="section panels" id="trayectoria">
-          <div class="section-head">
-            <h2>Trayectoria</h2>
-            <p>Resumen mensual de cortes de tu equipo.</p>
-          </div>
-          <div class="panel-grid">
-            <div class="panel-card">
-              <ul class="list" id="owner-history"></ul>
+          <details class="section-toggle">
+            <summary class="section-summary">
+              <div>
+                <h2>Trayectoria</h2>
+                <p>Resumen mensual de ventas y clientes.</p>
+              </div>
+            </summary>
+            <div class="section-body">
+              <form id="owner-stats-filter" class="filter-row">
+                <label class="date-field">
+                  Mes
+                  <input id="stats-month" type="month" />
+                </label>
+                <label class="date-field">
+                  Desde
+                  <input id="stats-from" type="date" />
+                </label>
+                <label class="date-field">
+                  Hasta
+                  <input id="stats-to" type="date" />
+                </label>
+                <div class="filter-actions">
+                  <button class="ghost" type="button" id="stats-clear">Limpiar</button>
+                  <button class="cta" type="submit">Aplicar</button>
+                </div>
+              </form>
+              <div class="stats-grid">
+                <div class="stat-card">
+                  <span>Ingresos del mes</span>
+                  <strong id="owner-revenue">-</strong>
+                </div>
+                <div class="stat-card">
+                  <span>Ventas del mes</span>
+                  <strong id="owner-sales">-</strong>
+                </div>
+                <div class="stat-card">
+                  <span>Ticket promedio</span>
+                  <strong id="owner-avg-ticket">-</strong>
+                </div>
+                <div class="stat-card">
+                  <span>Top cliente</span>
+                  <strong id="owner-top-client">-</strong>
+                  <small id="owner-top-total"></small>
+                </div>
+              </div>
+              <div class="panel-grid">
+                <div class="panel-card">
+                  <div class="chart-head">
+                    <h3>Ventas por dia</h3>
+                    <span id="owner-stats-period" class="muted"></span>
+                  </div>
+                  <div class="chart-bars" id="owner-sales-chart"></div>
+                </div>
+              </div>
             </div>
-          </div>
+          </details>
         </section>
 
         <section class="section panels" id="gestion">
-          <div class="section-head">
-            <h2>Gestion de peluqueros</h2>
-            <p>Sumar nuevos peluqueros o convertir clientes.</p>
-          </div>
-          <div class="panel-grid">
-            <div class="panel-card">
-              <form id="owner-create-form" class="form-grid">
-                <p class="muted">Crear peluquero</p>
-                <label>
-                  Nombre
-                  <input id="owner-user-name" type="text" placeholder="Ej: Mateo" />
-                </label>
-                <label>
-                  Usuario
-                  <input id="owner-user-username" type="text" placeholder="Ej: mateo" />
-                </label>
-                <label>
-                  Clave
-                  <input id="owner-user-password" type="password" placeholder="Ej: 123456" />
-                </label>
-                <label>
-                  Peluqueria
-                  <input id="owner-user-shop" type="text" disabled />
-                </label>
-                <button class="cta full" type="submit">Crear peluquero</button>
-              </form>
-              <form id="owner-convert-form" class="form-grid">
-                <p class="muted">Convertir cliente a peluquero</p>
-                <label>
-                  Usuario existente
-                  <input id="owner-convert-username" type="text" placeholder="Ej: cliente1" />
-                </label>
-                <button class="ghost full" type="submit">Convertir</button>
-              </form>
-              <form id="owner-remove-form" class="form-grid">
-                <p class="muted">Eliminar peluquero</p>
-                <label>
-                  Peluquero
-                  <select id="owner-remove-barber"></select>
-                </label>
-                <button class="ghost full" type="submit">Eliminar</button>
-              </form>
-              <form id="owner-logo-form" class="form-grid">
-                <p class="muted">Logo de la peluqueria</p>
-                <label class="upload-card" for="owner-logo-input">
-                  <input id="owner-logo-input" type="file" accept="image/*" />
-                  <div class="upload-icon" aria-hidden="true">UP</div>
-                  <div>
-                    <p class="upload-title">Subi una imagen</p>
-                    <p class="upload-hint">PNG o JPG, recomendacion 1:1</p>
-                  </div>
-                  <span class="ghost upload-cta">Elegir archivo</span>
-                </label>
-                <div class="logo-preview-row">
-                  <canvas
-                    id="owner-logo-thumb"
-                    class="logo-thumb"
-                    width="120"
-                    height="120"
-                  ></canvas>
-                  <button class="ghost" type="button" id="owner-logo-edit" disabled>
-                    Editar recorte
-                  </button>
+          <details class="section-toggle">
+            <summary class="section-summary">
+              <div>
+                <h2>Gestion de peluqueros</h2>
+                <p>Sumar nuevos peluqueros o convertir clientes.</p>
+              </div>
+            </summary>
+            <div class="section-body">
+              <div class="panel-grid">
+                <div class="panel-card">
+                  <form id="owner-create-form" class="form-grid">
+                    <p class="muted">Crear peluquero</p>
+                    <label>
+                      Nombre
+                      <input id="owner-user-name" type="text" placeholder="Ej: Mateo" />
+                    </label>
+                    <label>
+                      Usuario
+                      <input id="owner-user-username" type="text" placeholder="Ej: mateo" />
+                    </label>
+                    <label>
+                      Clave
+                      <input id="owner-user-password" type="password" placeholder="Ej: 123456" />
+                    </label>
+                    <label>
+                      Peluqueria
+                      <input id="owner-user-shop" type="text" disabled />
+                    </label>
+                    <button class="cta full" type="submit">Crear peluquero</button>
+                  </form>
+                  <form id="owner-convert-form" class="form-grid">
+                    <p class="muted">Convertir cliente a peluquero</p>
+                    <label>
+                      Usuario existente
+                      <input id="owner-convert-username" type="text" placeholder="Ej: cliente1" />
+                    </label>
+                    <button class="ghost full" type="submit">Convertir</button>
+                  </form>
+                  <form id="owner-remove-form" class="form-grid">
+                    <p class="muted">Eliminar peluquero</p>
+                    <label>
+                      Peluquero
+                      <select id="owner-remove-barber"></select>
+                    </label>
+                    <button class="ghost full" type="submit">Eliminar</button>
+                  </form>
+                  <form id="owner-logo-form" class="form-grid">
+                    <p class="muted">Logo de la peluqueria</p>
+                    <label class="upload-card" for="owner-logo-input">
+                      <input id="owner-logo-input" type="file" accept="image/*" />
+                      <div class="upload-icon" aria-hidden="true">UP</div>
+                      <div>
+                        <p class="upload-title">Subi una imagen</p>
+                        <p class="upload-hint">PNG o JPG, recomendacion 1:1</p>
+                      </div>
+                      <span class="ghost upload-cta">Elegir archivo</span>
+                    </label>
+                    <div class="logo-preview-row">
+                      <canvas
+                        id="owner-logo-thumb"
+                        class="logo-thumb"
+                        width="120"
+                        height="120"
+                      ></canvas>
+                      <button class="ghost" type="button" id="owner-logo-edit" disabled>
+                        Editar recorte
+                      </button>
+                    </div>
+                    <button class="ghost full" type="submit">Guardar logo</button>
+                  </form>
+                  <p id="owner-manage-message" class="form-message"></p>
                 </div>
-                <button class="ghost full" type="submit">Guardar logo</button>
-              </form>
-              <p id="owner-manage-message" class="form-message"></p>
+              </div>
             </div>
-          </div>
+          </details>
+        </section>
+
+        <section class="section panels" id="gestion-peluqueria">
+          <details class="section-toggle">
+            <summary class="section-summary">
+              <div>
+                <h2>Gestion peluqueria</h2>
+                <p>Servicios disponibles y precios.</p>
+              </div>
+            </summary>
+            <div class="section-body">
+              <div class="panel-grid">
+                <div class="panel-card">
+                  <form id="owner-service-form" class="form-grid">
+                    <p class="muted">Agregar servicio</p>
+                    <label>
+                      Servicio
+                      <input id="owner-service-name" type="text" placeholder="Ej: Corte premium" />
+                    </label>
+                    <label>
+                      Precio
+                      <input id="owner-service-price" type="number" min="0" step="0.01" placeholder="Ej: 3500" />
+                    </label>
+                    <button class="cta full" type="submit">Agregar</button>
+                  </form>
+                  <div class="service-list" id="owner-service-list"></div>
+                  <p id="owner-service-message" class="form-message"></p>
+                </div>
+              </div>
+            </div>
+          </details>
         </section>
       </main>
     </div>

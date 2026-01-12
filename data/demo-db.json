@@ -10,9 +10,10 @@
   "shops": [
     {
       "id": 1,
-      "name": "Distrito 17",
-      "address": "Av. Central 1240",
-      "logo_url": "/uploads/logo-1-1767980767958.png"
+      "name": "Berserker",
+      "address": "Gutierrez",
+      "logo_url": "/uploads/logo-1-1768225164589.png",
+      "description": null
     },
     {
       "id": 2,
@@ -264,16 +265,5 @@
       "name": "Lavado premium"
     }
   ],
-  "appointments": [
-    {
-      "id": 1,
-      "shop_id": 1,
-      "barber_id": 1,
-      "client_id": 4,
-      "date": "2026-01-10",
-      "time": "12:00",
-      "service": "Corte clasico",
-      "created_at": "2026-01-09T14:50:48.780Z"
-    }
-  ]
+  "appointments": []
 }

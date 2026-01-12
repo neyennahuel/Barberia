@@ -114,6 +114,29 @@ body {
   font-size: 0.85rem;
 }
 
+.icon-link {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  display: grid;
+  place-items: center;
+  color: var(--ink);
+  background: #fff;
+  text-decoration: none;
+}
+
+.icon-link:hover {
+  border-color: #cfcfcf;
+  background: #f7f7f7;
+}
+
+.icon-link svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
 .cta,
 .ghost {
   border: none;
@@ -235,6 +258,41 @@ body {
   font-size: clamp(1.8rem, 3vw, 2.6rem);
 }
 
+.section-toggle {
+  border: none;
+}
+
+.section-summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  gap: 16px;
+}
+
+.section-summary::-webkit-details-marker {
+  display: none;
+}
+
+.section-summary::after {
+  content: "";
+  width: 12px;
+  height: 12px;
+  border-right: 2px solid var(--ink);
+  border-bottom: 2px solid var(--ink);
+  transform: rotate(45deg);
+  transition: transform 0.2s ease;
+}
+
+.section-toggle[open] .section-summary::after {
+  transform: rotate(-135deg);
+}
+
+.section-body {
+  margin-top: 24px;
+}
+
 .section-head-row {
   display: flex;
   flex-wrap: wrap;
@@ -283,14 +341,49 @@ body {
   gap: 12px;
   align-items: center;
   cursor: pointer;
+  position: relative;
+}
+
+.fav-toggle {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid #e1e1e1;
+  background: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.fav-toggle svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: #999;
+  stroke-width: 1.6;
+}
+
+.fav-toggle.is-fav {
+  border-color: #e3c26b;
+  background: #fff8e1;
+}
+
+.fav-toggle.is-fav svg {
+  fill: #f2c94c;
+  stroke: #c9971a;
 }
 
 .shop-logo {
   width: 56px;
   height: 56px;
-  border-radius: 16px;
+  border-radius: 50%;
   object-fit: cover;
+  object-position: center;
   background: #ffe6d6;
+  display: block;
 }
 
 .shop-meta h4 {
@@ -428,6 +521,15 @@ input {
   width: 100%;
 }
 
+textarea {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid #dedede;
+  font-family: inherit;
+  width: 100%;
+  resize: vertical;
+}
+
 .full {
   width: 100%;
 }
@@ -521,32 +623,42 @@ input {
 }
 
 .logo-modal {
-  width: min(760px, 92vw);
+  width: clamp(520px, 90vw, 980px);
+  padding: 32px;
 }
 
 .logo-modal-head {
   display: grid;
-  grid-template-columns: minmax(300px, 1fr) minmax(220px, 260px);
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
+  gap: 12px;
 }
 
 .logo-modal-head h3 {
+  margin: 0;
   grid-column: 2;
-  margin: 0 0 6px 0;
+  text-align: center;
 }
 
 .logo-modal-head .icon-btn {
-  grid-column: 2;
+  grid-column: 3;
   justify-self: end;
+  border: 1px solid #dedede;
+  background: #fff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1;
+  color: #444;
 }
 
-.logo-modal-head h3 + .icon-btn {
-  margin-top: -42px;
+.logo-modal-head .icon-btn:hover {
+  border-color: #c7c7c7;
+  background: #f6f6f6;
 }
 
 .logo-modal-body {
   display: grid;
-  grid-template-columns: minmax(300px, 1fr) minmax(220px, 260px);
+  grid-template-columns: 2fr 1fr;
   gap: 32px;
   align-items: center;
 }
@@ -554,7 +666,7 @@ input {
 .crop-frame {
   background: #f3f3f3;
   border-radius: 22px;
-  padding: 26px;
+  padding: 28px;
   display: grid;
   place-items: center;
 }
@@ -562,7 +674,7 @@ input {
 .crop-frame canvas {
   width: 100%;
   height: auto;
-  max-width: 360px;
+  max-width: 460px;
   border-radius: 50%;
   background: #111;
 }
@@ -630,6 +742,42 @@ input {
 
 .upload-cta {
   pointer-events: none;
+}
+
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.media-card {
+  border: 1px solid #e4e4e4;
+  border-radius: 16px;
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+  background: #fff;
+}
+
+.media-card img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 12px;
+  background: #f2f2f2;
+}
+
+.media-card label {
+  cursor: pointer;
+  text-align: center;
+}
+
+.media-card label.ghost {
+  display: block;
+}
+
+.media-card input {
+  display: none;
 }
 
 .crop-controls {
@@ -713,6 +861,108 @@ input {
   min-height: 18px;
 }
 
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  margin-bottom: 16px;
+}
+
+.stat-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 6px;
+}
+
+.stat-card strong {
+  font-size: 1.4rem;
+}
+
+.stat-card small {
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+}
+
+.chart-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.chart-head h3 {
+  margin-top: 4px;
+}
+
+.chart-bars {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16px, 1fr));
+  gap: 6px;
+  align-items: end;
+  min-height: 160px;
+}
+
+.filter-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 16px;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.chart-bar {
+  display: grid;
+  gap: 6px;
+  align-items: end;
+  justify-items: center;
+}
+
+.bar-fill {
+  width: 100%;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #ff8f5a, #ff6a3d);
+  min-height: 6px;
+}
+
+.bar-day {
+  font-size: 0.7rem;
+  color: var(--ink-soft);
+}
+
+.service-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.service-item {
+  display: grid;
+  grid-template-columns: 1fr 140px auto auto;
+  gap: 10px;
+  align-items: center;
+  background: #fff6ee;
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.service-item input {
+  padding: 8px 10px;
+}
+
+.service-item button {
+  white-space: nowrap;
+}
 .muted {
   color: #bdbdbd;
   font-size: 0.9rem;
@@ -750,7 +1000,7 @@ input {
 
 .logo-modal .modal-actions {
   display: grid;
-  grid-template-columns: minmax(300px, 1fr) minmax(220px, 260px);
+  grid-template-columns: 2fr 1fr;
 }
 
 .logo-modal .modal-actions-right {
