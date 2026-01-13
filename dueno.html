@@ -13,7 +13,7 @@
           <span class="brand-mark">BT</span>
           <div>
             <p class="brand-name">BarberTurno</p>
-            <p class="brand-tag">Dueno</p>
+            <p class="brand-tag" id="owner-role-tag">Dueno</p>
           </div>
         </div>
         <nav class="site-nav">
@@ -77,11 +77,11 @@
                   Mes
                   <input id="stats-month" type="month" />
                 </label>
-                <label class="date-field">
+                <label class="date-field vip-only">
                   Desde
                   <input id="stats-from" type="date" />
                 </label>
-                <label class="date-field">
+                <label class="date-field vip-only">
                   Hasta
                   <input id="stats-to" type="date" />
                 </label>
@@ -95,22 +95,22 @@
                   <span>Ingresos del mes</span>
                   <strong id="owner-revenue">-</strong>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card vip-only">
                   <span>Ventas del mes</span>
                   <strong id="owner-sales">-</strong>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card vip-only">
                   <span>Ticket promedio</span>
                   <strong id="owner-avg-ticket">-</strong>
                 </div>
-                <div class="stat-card">
+                <div class="stat-card vip-only">
                   <span>Top cliente</span>
                   <strong id="owner-top-client">-</strong>
                   <small id="owner-top-total"></small>
                 </div>
               </div>
               <div class="panel-grid">
-                <div class="panel-card">
+                <div class="panel-card vip-only">
                   <div class="chart-head">
                     <h3>Ventas por dia</h3>
                     <span id="owner-stats-period" class="muted"></span>

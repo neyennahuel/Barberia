@@ -1,7 +1,7 @@
 {
   "nextIds": {
     "shops": 4,
-    "users": 9,
+    "users": 10,
     "barbers": 4,
     "barber_slots": 22,
     "shop_services": 10,
@@ -13,19 +13,28 @@
       "name": "Berserker",
       "address": "Gutierrez",
       "logo_url": "/uploads/logo-1-1768225164589.png",
+      "latitude": -32.8896,
+      "longitude": -68.8443,
+      "location_url": "https://www.google.com/maps/@-32.8896,-68.8443,17z",
       "description": null
     },
     {
       "id": 2,
       "name": "Norte 5",
       "address": "Av. Libertad 450",
-      "logo_url": null
+      "logo_url": null,
+      "latitude": -32.8881,
+      "longitude": -68.8509,
+      "location_url": "https://www.google.com/maps/@-32.8881,-68.8509,17z"
     },
     {
       "id": 3,
       "name": "Sur 23",
       "address": "Calle Mitre 2100",
-      "logo_url": null
+      "logo_url": null,
+      "latitude": -32.8992,
+      "longitude": -68.8324,
+      "location_url": "https://www.google.com/maps/@-32.8992,-68.8324,17z"
     }
   ],
   "users": [
@@ -39,10 +48,10 @@
     },
     {
       "id": 2,
-      "username": "dueno",
+      "username": "duenovip",
       "password": "dueno123",
-      "name": "Duenio Distrito",
-      "role": "dueno",
+      "name": "Duenio VIP Distrito",
+      "role": "duenovip",
       "shop_id": 1
     },
     {
@@ -92,6 +101,14 @@
       "name": "Bruno",
       "role": "peluquero",
       "shop_id": 3
+    },
+    {
+      "id": 9,
+      "username": "dueno",
+      "password": "dueno123",
+      "name": "Duenio Gratis",
+      "role": "dueno",
+      "shop_id": 1
     }
   ],
   "barbers": [

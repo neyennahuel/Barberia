@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Crear cuenta | Barberia</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="site-header">
+        <div class="brand">
+          <span class="brand-mark">BT</span>
+          <div>
+            <p class="brand-name">BarberTurno</p>
+            <p class="brand-tag">Crear cuenta</p>
+          </div>
+        </div>
+        <nav class="site-nav">
+          <a href="index.html">Volver</a>
+        </nav>
+      </header>
+
+      <main>
+        <section class="section">
+          <div class="section-head">
+            <h2>Sumate a BarberTurno</h2>
+            <p>Empeza con un registro rapido o vincula tu cuenta de Google.</p>
+          </div>
+          <div class="panel-grid">
+            <div class="panel-card">
+              <div class="auth-stack">
+                <a class="auth-provider" href="/auth/google" data-provider="Google">
+                  <span>Continuar con Google</span>
+                </a>
+              </div>
+              <div class="auth-divider">
+                <span>o crea tu cuenta</span>
+              </div>
+              <form class="form-grid">
+                <label>
+                  Nombre
+                  <input type="text" placeholder="Ej: Martina" required />
+                </label>
+                <label>
+                  Email
+                  <input type="email" placeholder="martina@email.com" required />
+                </label>
+                <label>
+                  Clave
+                  <input type="password" placeholder="Minimo 6 caracteres" required />
+                </label>
+                <button class="cta full" type="submit">Crear cuenta</button>
+              </form>
+              <p class="muted">Al crear una cuenta aceptas los terminos de uso.</p>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+    <div class="modal-backdrop is-hidden" id="link-modal" aria-hidden="true">
+      <div class="modal-card link-modal" role="dialog" aria-modal="true" aria-labelledby="link-title">
+        <h3 id="link-title">Vincular cuenta</h3>
+        <p id="link-message"></p>
+        <div class="modal-actions">
+          <button class="ghost" type="button" id="link-cancel">Cancelar</button>
+          <button class="cta" type="button" id="link-confirm">Vincular</button>
+        </div>
+      </div>
+    </div>
+    <script>
+      const providerButtons = document.querySelectorAll("[data-provider]");
+      const linkModal = document.getElementById("link-modal");
+      const linkMessage = document.getElementById("link-message");
+      const linkCancel = document.getElementById("link-cancel");
+      const linkConfirm = document.getElementById("link-confirm");
+      let pendingAuthUrl = "";
+
+      function openLinkModal(provider, authUrl) {
+        if (!linkModal || !linkMessage) return;
+        pendingAuthUrl = authUrl || "";
+        linkMessage.textContent = `¿Queres vincular tu cuenta con ${provider}?`;
+        linkModal.classList.remove("is-hidden");
+        linkModal.setAttribute("aria-hidden", "false");
+        linkConfirm?.focus();
+      }
+
+      function closeLinkModal() {
+        if (!linkModal) return;
+        linkModal.classList.add("is-hidden");
+        linkModal.setAttribute("aria-hidden", "true");
+      }
+
+      providerButtons.forEach((button) => {
+        button.addEventListener("click", (event) => {
+          event.preventDefault();
+          const provider = button.getAttribute("data-provider");
+          const authUrl = button.getAttribute("href");
+          if (provider) openLinkModal(provider, authUrl);
+        });
+      });
+
+      if (linkCancel) {
+        linkCancel.addEventListener("click", closeLinkModal);
+      }
+
+      if (linkConfirm) {
+        linkConfirm.addEventListener("click", () => {
+          closeLinkModal();
+          if (pendingAuthUrl) {
+            window.location.href = pendingAuthUrl;
+          }
+        });
+      }
+
+      if (linkModal) {
+        linkModal.addEventListener("click", (event) => {
+          if (event.target === linkModal) {
+            closeLinkModal();
+          }
+        });
+      }
+
+      window.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") closeLinkModal();
+      });
+    </script>
+  </body>
+</html>

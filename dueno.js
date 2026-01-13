@@ -1,4 +1,4 @@
-const currentUser = requireRole(["dueno"]);
+const currentUser = requireRole(["dueno", "duenovip"]);
 setupSessionBadge();
 
 const ownerBarber = document.getElementById("owner-barber");
@@ -46,6 +46,17 @@ const logoModal = document.getElementById("logo-modal");
 const logoClose = document.getElementById("logo-close");
 const logoCancel = document.getElementById("logo-cancel");
 const logoApply = document.getElementById("logo-apply");
+const ownerRoleTag = document.getElementById("owner-role-tag");
+const vipOnlyBlocks = document.querySelectorAll(".vip-only");
+const isVipOwner = currentUser.role === "duenovip";
+
+if (ownerRoleTag) {
+  ownerRoleTag.textContent = isVipOwner ? "Dueno VIP" : "Dueno";
+}
+
+if (!isVipOwner && vipOnlyBlocks.length) {
+  vipOnlyBlocks.forEach((element) => element.classList.add("is-hidden"));
+}
 
 const ownerCropper = createCropper({
   input: ownerLogoInput,

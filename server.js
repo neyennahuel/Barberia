@@ -125,6 +125,119 @@ function isPastTimeForDate(dateStr, timeStr) {
   return timeToMinutes(timeStr) <= nowMinutes;
 }
 
+function isOwnerRole(role) {
+  return role === "dueno" || role === "duenovip";
+}
+
+function getBaseUrl(req) {
+  return `${req.protocol}://${req.get("host")}`;
+}
+
+function decodeJwtPayload(token) {
+  if (!token) return null;
+  const parts = token.split(".");
+  if (parts.length < 2) return null;
+  const payload = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+  const padded = payload.padEnd(payload.length + ((4 - (payload.length % 4)) % 4), "=");
+  try {
+    return JSON.parse(Buffer.from(padded, "base64").toString("utf8"));
+  } catch (error) {
+    return null;
+  }
+}
+
+function escapeJsonForHtml(value) {
+  return JSON.stringify(value).replace(/</g, "\\u003c");
+}
+
+function sendOAuthLogin(res, user) {
+  const userJson = escapeJsonForHtml(user);
+  res.send(`<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Accediendo...</title>
+  </head>
+  <body>
+    <p>Iniciando sesion...</p>
+    <script>
+      const USER_KEY = "barberia_user_v2";
+      const user = ${userJson};
+      const next = {
+        cliente: "cliente.html",
+        peluquero: "peluquero.html",
+        dueno: "dueno.html",
+        duenovip: "dueno.html",
+        admin: "admin.html",
+      }[user.role] || "index.html";
+      localStorage.setItem(USER_KEY, JSON.stringify(user));
+      window.location.href = next;
+    </script>
+  </body>
+</html>`);
+}
+
+function extractCoordsFromGoogleUrl(rawUrl) {
+  if (!rawUrl) return null;
+  let parsed;
+  try {
+    parsed = new URL(rawUrl);
+  } catch (error) {
+    return null;
+  }
+
+  const query = parsed.searchParams.get("q") || parsed.searchParams.get("query");
+  if (query) {
+    const match = query.match(/(-?\d+(\.\d+)?),\s*(-?\d+(\.\d+)?)/);
+    if (match) {
+      return { lat: Number(match[1]), lon: Number(match[3]) };
+    }
+  }
+
+  const ll = parsed.searchParams.get("ll");
+  if (ll) {
+    const match = ll.match(/(-?\d+(\.\d+)?),\s*(-?\d+(\.\d+)?)/);
+    if (match) {
+      return { lat: Number(match[1]), lon: Number(match[3]) };
+    }
+  }
+
+  const atMatch = parsed.pathname.match(/@(-?\d+(\.\d+)?),(-?\d+(\.\d+)?)/);
+  if (atMatch) {
+    return { lat: Number(atMatch[1]), lon: Number(atMatch[3]) };
+  }
+
+  return null;
+}
+
+async function resolveGoogleMapsCoords(rawUrl) {
+  const direct = extractCoordsFromGoogleUrl(rawUrl);
+  if (direct) return direct;
+
+  let parsed;
+  try {
+    parsed = new URL(rawUrl);
+  } catch (error) {
+    return null;
+  }
+
+  const host = parsed.hostname.replace(/^www\./, "");
+  const isShort =
+    host === "maps.app.goo.gl" || host === "goo.gl" || host === "g.page";
+  if (!isShort) return null;
+
+  try {
+    const response = await fetch(rawUrl, { redirect: "follow" });
+    if (response.body) {
+      response.body.cancel();
+    }
+    return extractCoordsFromGoogleUrl(response.url);
+  } catch (error) {
+    return null;
+  }
+}
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 app.use("/uploads", express.static(UPLOAD_DIR));
@@ -166,7 +279,7 @@ app.get(
   "/api/shops",
   asyncHandler(async (req, res) => {
     const shops = await dbAll(
-      "SELECT id, name, address, logo_url FROM shops ORDER BY name"
+      "SELECT id, name, address, logo_url, location_url, latitude, longitude FROM shops ORDER BY name"
     );
     res.json(shops);
   })
@@ -190,7 +303,7 @@ app.get(
     }
 
     const isAdmin = actor.role === "admin";
-    const isOwner = actor.role === "dueno" && String(actor.shopId) === String(shopId);
+    const isOwner = isOwnerRole(actor.role) && String(actor.shopId) === String(shopId);
     if (!isAdmin && !isOwner) {
       return res.status(403).json({ error: "Sin permisos." });
     }
@@ -202,7 +315,10 @@ app.get(
               description,
               logo_url as logoUrl,
               image_url_1 as imageUrl1,
-              image_url_2 as imageUrl2
+              image_url_2 as imageUrl2,
+              location_url as locationUrl,
+              latitude,
+              longitude
        FROM shops
        WHERE id = $1`,
       [shopId]
@@ -219,9 +335,9 @@ app.get(
 app.put(
   "/api/shops/:id",
   asyncHandler(async (req, res) => {
-    const { actorId, name, address, description } = req.body || {};
+    const { actorId, name, address, description, locationUrl } = req.body || {};
     const shopId = req.params.id;
-    if (!actorId || !name || !address) {
+    if (!actorId || !name) {
       return res.status(400).json({ error: "Faltan datos." });
     }
 
@@ -234,14 +350,50 @@ app.put(
     }
 
     const isAdmin = actor.role === "admin";
-    const isOwner = actor.role === "dueno" && String(actor.shopId) === String(shopId);
+    const isOwner = isOwnerRole(actor.role) && String(actor.shopId) === String(shopId);
     if (!isAdmin && !isOwner) {
       return res.status(403).json({ error: "Sin permisos." });
     }
 
+    const current = await dbGet(
+      "SELECT address, location_url as locationUrl FROM shops WHERE id = $1",
+      [shopId]
+    );
+    const finalAddress = address || current?.address || "";
+    let finalLocationUrl =
+      locationUrl !== undefined ? locationUrl.trim() : current?.locationUrl || null;
+    if (finalLocationUrl === "") {
+      finalLocationUrl = null;
+    }
+    let coords = null;
+    if (finalLocationUrl) {
+      coords = await resolveGoogleMapsCoords(finalLocationUrl);
+      if (!coords) {
+        return res.status(400).json({
+          error:
+            "No se pudieron leer coordenadas. Usa el link compartido de Google Maps o el link completo.",
+        });
+      }
+    }
+
     await dbRun(
-      "UPDATE shops SET name = $1, address = $2, description = $3 WHERE id = $4",
-      [name, address, description || null, shopId]
+      `UPDATE shops
+       SET name = $1,
+           address = $2,
+           description = $3,
+           location_url = $4,
+           latitude = $5,
+           longitude = $6
+       WHERE id = $7`,
+      [
+        name,
+        finalAddress,
+        description || null,
+        finalLocationUrl,
+        coords ? coords.lat : null,
+        coords ? coords.lon : null,
+        shopId,
+      ]
     );
 
     res.json({ ok: true });
@@ -270,7 +422,7 @@ app.post(
     }
 
     const isAdmin = actor.role === "admin";
-    const isOwner = actor.role === "dueno";
+    const isOwner = isOwnerRole(actor.role);
     if (!isAdmin && !isOwner) {
       return res.status(403).json({ error: "Sin permisos." });
     }
@@ -369,7 +521,7 @@ app.post(
     }
 
     const isAdmin = actor.role === "admin";
-    const isOwner = actor.role === "dueno";
+    const isOwner = isOwnerRole(actor.role);
     if (!isAdmin && !isOwner) {
       return res.status(403).json({ error: "Sin permisos." });
     }
@@ -416,7 +568,7 @@ app.post(
     }
 
     const isAdmin = actor.role === "admin";
-    const isOwner = actor.role === "dueno";
+    const isOwner = isOwnerRole(actor.role);
 
     if (!isAdmin && !isOwner) {
       return res.status(403).json({ error: "Sin permisos." });
@@ -431,7 +583,11 @@ app.post(
       }
     }
 
-    if ((role === "peluquero" || role === "dueno") && !shopId && !actor.shopId) {
+    if (
+      (role === "peluquero" || role === "dueno" || role === "duenovip") &&
+      !shopId &&
+      !actor.shopId
+    ) {
       return res.status(400).json({ error: "Falta shopId." });
     }
 
@@ -522,7 +678,7 @@ app.delete(
     }
 
     const isAdmin = actor.role === "admin";
-    const isOwner = actor.role === "dueno" && actor.shopId === barber.shopId;
+    const isOwner = isOwnerRole(actor.role) && actor.shopId === barber.shopId;
     if (!isAdmin && !isOwner) {
       return res.status(403).json({ error: "Sin permisos." });
     }
@@ -567,7 +723,7 @@ app.get(
     if (!actor) return res.status(403).json({ error: "Sin permisos." });
 
     const isAdmin = actor.role === "admin";
-    const isOwner = actor.role === "dueno";
+    const isOwner = isOwnerRole(actor.role);
     const targetShopId = isOwner ? actor.shopId : shopId;
     if (!targetShopId) return res.status(400).json({ error: "Falta shopId" });
 
@@ -599,7 +755,7 @@ app.post(
     if (!actor) return res.status(403).json({ error: "Sin permisos." });
 
     const isAdmin = actor.role === "admin";
-    const isOwner = actor.role === "dueno";
+    const isOwner = isOwnerRole(actor.role);
     if (!isAdmin && !isOwner) {
       return res.status(403).json({ error: "Sin permisos." });
     }
@@ -645,7 +801,7 @@ app.put(
     if (!service) return res.status(404).json({ error: "Servicio no encontrado." });
 
     const isAdmin = actor.role === "admin";
-    const isOwner = actor.role === "dueno" && actor.shopId === service.shopId;
+    const isOwner = isOwnerRole(actor.role) && actor.shopId === service.shopId;
     if (!isAdmin && !isOwner) {
       return res.status(403).json({ error: "Sin permisos." });
     }
@@ -684,7 +840,7 @@ app.delete(
     if (!service) return res.status(404).json({ error: "Servicio no encontrado." });
 
     const isAdmin = actor.role === "admin";
-    const isOwner = actor.role === "dueno" && actor.shopId === service.shopId;
+    const isOwner = isOwnerRole(actor.role) && actor.shopId === service.shopId;
     if (!isAdmin && !isOwner) {
       return res.status(403).json({ error: "Sin permisos." });
     }
@@ -869,7 +1025,7 @@ app.delete(
 
     const isAdmin = actor.role === "admin";
     const isBarber = actor.role === "peluquero" && actor.barberId === appointment.barber_id;
-    const isOwner = actor.role === "dueno" && actor.shopId === appointment.shop_id;
+    const isOwner = isOwnerRole(actor.role) && actor.shopId === appointment.shop_id;
 
     if (!isAdmin && !isBarber && !isOwner) {
       return res.status(403).json({ error: "Sin permisos." });
@@ -932,7 +1088,7 @@ app.get(
     }
 
     const isAdmin = actor.role === "admin";
-    const isOwner = actor.role === "dueno";
+    const isOwner = isOwnerRole(actor.role);
     if (!isAdmin && !isOwner) {
       return res.status(403).json({ error: "Sin permisos." });
     }
@@ -1065,7 +1221,7 @@ app.post(
     }
 
     const isAdmin = actor.role === "admin";
-    const isOwner = actor.role === "dueno";
+    const isOwner = isOwnerRole(actor.role);
     if (!isAdmin && !isOwner) {
       return res.status(403).json({ error: "Sin permisos." });
     }
@@ -1098,6 +1254,126 @@ app.post(
     );
 
     res.json({ ok: true });
+  })
+);
+
+app.post(
+  "/api/users/owner-role",
+  asyncHandler(async (req, res) => {
+    const { actorId, username, role } = req.body || {};
+    if (!actorId || !username || !role) {
+      return res.status(400).json({ error: "Faltan datos." });
+    }
+
+    if (!isOwnerRole(role)) {
+      return res.status(400).json({ error: "Rol invalido." });
+    }
+
+    const actor = await dbGet("SELECT role FROM users WHERE id = $1", [actorId]);
+    if (!actor || actor.role !== "admin") {
+      return res.status(403).json({ error: "Sin permisos." });
+    }
+
+    const target = await dbGet("SELECT id, role FROM users WHERE username = $1", [
+      username,
+    ]);
+    if (!target) {
+      return res.status(404).json({ error: "Usuario no encontrado." });
+    }
+    if (!isOwnerRole(target.role)) {
+      return res.status(409).json({ error: "El usuario no es dueno." });
+    }
+
+    const updated = await dbGet(
+      "UPDATE users SET role = $1 WHERE id = $2 RETURNING id, username, role, shop_id as shopId",
+      [role, target.id]
+    );
+
+    res.json(updated);
+  })
+);
+
+app.get("/auth/google", (req, res) => {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  if (!clientId) {
+    return res.status(501).send("Google OAuth no configurado.");
+  }
+
+  const redirectUri =
+    process.env.GOOGLE_REDIRECT_URI || `${getBaseUrl(req)}/auth/google/callback`;
+  const params = new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    response_type: "code",
+    scope: "openid email profile",
+    access_type: "offline",
+    prompt: "consent",
+  });
+
+  res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`);
+});
+
+app.get(
+  "/auth/google/callback",
+  asyncHandler(async (req, res) => {
+    const { code, error } = req.query || {};
+    if (error) {
+      return res.status(400).send(`Google OAuth error: ${error}`);
+    }
+    if (!code) {
+      return res.status(400).send("Falta el codigo de Google.");
+    }
+
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+    if (!clientId || !clientSecret) {
+      return res.status(501).send("Google OAuth no configurado.");
+    }
+
+    const redirectUri =
+      process.env.GOOGLE_REDIRECT_URI || `${getBaseUrl(req)}/auth/google/callback`;
+
+    const tokenParams = new URLSearchParams({
+      code: String(code),
+      client_id: clientId,
+      client_secret: clientSecret,
+      redirect_uri: redirectUri,
+      grant_type: "authorization_code",
+    });
+
+    const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: tokenParams.toString(),
+    });
+    const tokenData = await tokenResponse.json();
+    if (!tokenResponse.ok) {
+      return res.status(400).send(tokenData.error_description || "OAuth invalido.");
+    }
+
+    const payload = decodeJwtPayload(tokenData.id_token);
+    const email = payload?.email;
+    const name = payload?.name || payload?.given_name || "Nuevo cliente";
+    if (!email) {
+      return res.status(400).send("Google no devolvio email.");
+    }
+
+    let user = await dbGet(
+      "SELECT id, username, name, role, shop_id as shopId FROM users WHERE username = $1",
+      [email]
+    );
+
+    if (!user) {
+      const created = await dbGet(
+        `INSERT INTO users (username, password, name, role, shop_id)
+         VALUES ($1, $2, $3, $4, $5)
+         RETURNING id, username, name, role, shop_id as shopId`,
+        [email, "oauth-google", name, "cliente", null]
+      );
+      user = created;
+    }
+
+    sendOAuthLogin(res, { ...user, barberId: null });
   })
 );
 

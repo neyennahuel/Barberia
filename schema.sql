@@ -3,6 +3,9 @@ CREATE TABLE IF NOT EXISTS shops (
   name TEXT NOT NULL,
   address TEXT NOT NULL,
   logo_url TEXT,
+  latitude NUMERIC(9, 6),
+  longitude NUMERIC(9, 6),
+  location_url TEXT,
   description TEXT,
   image_url_1 TEXT,
   image_url_2 TEXT

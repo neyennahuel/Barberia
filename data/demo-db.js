@@ -16,7 +16,7 @@ function seedState() {
   return {
     nextIds: {
       shops: 4,
-      users: 9,
+      users: 10,
       barbers: 4,
       barber_slots: 22,
       shop_services: 10,
@@ -29,6 +29,9 @@ function seedState() {
         address: "Av. Central 1240",
         description: null,
         logo_url: null,
+        latitude: -32.8896,
+        longitude: -68.8443,
+        location_url: "https://www.google.com/maps/@-32.8896,-68.8443,17z",
         image_url_1: null,
         image_url_2: null,
       },
@@ -38,6 +41,9 @@ function seedState() {
         address: "Av. Libertad 450",
         description: null,
         logo_url: null,
+        latitude: -32.8881,
+        longitude: -68.8509,
+        location_url: "https://www.google.com/maps/@-32.8881,-68.8509,17z",
         image_url_1: null,
         image_url_2: null,
       },
@@ -47,19 +53,30 @@ function seedState() {
         address: "Calle Mitre 2100",
         description: null,
         logo_url: null,
+        latitude: -32.8992,
+        longitude: -68.8324,
+        location_url: "https://www.google.com/maps/@-32.8992,-68.8324,17z",
         image_url_1: null,
         image_url_2: null,
       },
     ],
     users: [
       { id: 1, username: "admin", password: "admin123", name: "Administrador", role: "admin", shop_id: null },
-      { id: 2, username: "dueno", password: "dueno123", name: "Duenio Distrito", role: "dueno", shop_id: 1 },
+      {
+        id: 2,
+        username: "duenovip",
+        password: "dueno123",
+        name: "Duenio VIP Distrito",
+        role: "duenovip",
+        shop_id: 1,
+      },
       { id: 3, username: "peluquero", password: "pelu123", name: "Lautaro", role: "peluquero", shop_id: 1 },
       { id: 4, username: "cliente", password: "cliente123", name: "Camila", role: "cliente", shop_id: null },
       { id: 5, username: "dueno2", password: "dueno123", name: "Duenio Norte", role: "dueno", shop_id: 2 },
       { id: 6, username: "pelu2", password: "pelu123", name: "Micaela", role: "peluquero", shop_id: 2 },
       { id: 7, username: "dueno3", password: "dueno123", name: "Duenio Sur", role: "dueno", shop_id: 3 },
       { id: 8, username: "pelu3", password: "pelu123", name: "Bruno", role: "peluquero", shop_id: 3 },
+      { id: 9, username: "dueno", password: "dueno123", name: "Duenio Gratis", role: "dueno", shop_id: 1 },
     ],
     barbers: [
       { id: 1, user_id: 3, shop_id: 1 },
@@ -148,13 +165,16 @@ function createDemoDb(options = {}) {
      FROM users
      LEFT JOIN barbers ON barbers.user_id = users.id
      WHERE users.username = $1 AND users.password = $2`,
-    listShops: "SELECT id, name, address, logo_url FROM shops ORDER BY name",
+    listShops:
+      "SELECT id, name, address, logo_url, location_url, latitude, longitude FROM shops ORDER BY name",
     insertShop: "INSERT INTO shops (name, address) VALUES ($1, $2) RETURNING id, name, address",
     userRoleById: "SELECT role FROM users WHERE id = $1",
     userByIdWithShop: "SELECT id, role, shop_id as shopId FROM users WHERE id = $1",
     updateShopLogo: "UPDATE shops SET logo_url = $1 WHERE id = $2",
-    shopById: "SELECT id, name, address, description, logo_url as logoUrl, image_url_1 as imageUrl1, image_url_2 as imageUrl2 FROM shops WHERE id = $1",
-    updateShopDetails: "UPDATE shops SET name = $1, address = $2, description = $3 WHERE id = $4",
+    shopById:
+      "SELECT id, name, address, description, logo_url as logoUrl, image_url_1 as imageUrl1, image_url_2 as imageUrl2, location_url as locationUrl, latitude, longitude FROM shops WHERE id = $1",
+    updateShopDetails:
+      "UPDATE shops SET name = $1, address = $2, description = $3, location_url = $4, latitude = $5, longitude = $6 WHERE id = $7",
     updateShopImages: "UPDATE shops SET image_url_1 = $1, image_url_2 = $2 WHERE id = $3",
     shopImagesById: "SELECT image_url_1 as imageUrl1, image_url_2 as imageUrl2 FROM shops WHERE id = $1",
     insertUser: `INSERT INTO users (username, password, name, role, shop_id)
@@ -238,8 +258,12 @@ function createDemoDb(options = {}) {
          AND appointments.date <= $3
        ORDER BY appointments.date`,
     userByUsername: "SELECT id FROM users WHERE username = $1",
+    userByUsernameFull:
+      "SELECT id, username, name, role, shop_id as shopId FROM users WHERE username = $1",
     userByUsernameRole: "SELECT id, role FROM users WHERE username = $1",
     convertUser: "UPDATE users SET role = 'peluquero', shop_id = $1 WHERE id = $2",
+    updateOwnerRole:
+      "UPDATE users SET role = $1 WHERE id = $2 RETURNING id, username, role, shop_id as shopId",
   };
 
   handle(SQL.login, (params) => {
@@ -272,6 +296,9 @@ function createDemoDb(options = {}) {
         name: shop.name,
         address: shop.address,
         logo_url: shop.logo_url || null,
+        latitude: shop.latitude ?? null,
+        longitude: shop.longitude ?? null,
+        location_url: shop.location_url ?? null,
       }));
     return { rows };
   });
@@ -332,6 +359,9 @@ function createDemoDb(options = {}) {
               logoUrl: shop.logo_url || null,
               imageUrl1: shop.image_url_1 || null,
               imageUrl2: shop.image_url_2 || null,
+              latitude: shop.latitude ?? null,
+              longitude: shop.longitude ?? null,
+              locationUrl: shop.location_url ?? null,
             },
           ]
         : [],
@@ -339,12 +369,15 @@ function createDemoDb(options = {}) {
   });
 
   handle(SQL.updateShopDetails, (params) => {
-    const [name, address, description, shopId] = params;
+    const [name, address, description, locationUrl, latitude, longitude, shopId] = params;
     const shop = state.shops.find((item) => item.id === toId(shopId));
     if (shop) {
       shop.name = name;
       shop.address = address;
       shop.description = description || null;
+      shop.location_url = locationUrl || null;
+      shop.latitude = latitude === null || latitude === undefined ? null : Number(latitude);
+      shop.longitude = longitude === null || longitude === undefined ? null : Number(longitude);
       persist();
     }
     return { rows: [] };
@@ -396,6 +429,24 @@ function createDemoDb(options = {}) {
     const [username] = params;
     const user = state.users.find((item) => item.username === username);
     return { rows: user ? [{ id: user.id }] : [] };
+  });
+
+  handle(SQL.userByUsernameFull, (params) => {
+    const [username] = params;
+    const user = state.users.find((item) => item.username === username);
+    return {
+      rows: user
+        ? [
+            {
+              id: user.id,
+              username: user.username,
+              name: user.name,
+              role: user.role,
+              shopId: user.shop_id || null,
+            },
+          ]
+        : [],
+    };
   });
 
   handle(SQL.userByUsernameRole, (params) => {
@@ -774,6 +825,27 @@ function createDemoDb(options = {}) {
       user.role = "peluquero";
       user.shop_id = shopId;
       persist();
+    }
+    return { rows: [] };
+  });
+
+  handle(SQL.updateOwnerRole, (params) => {
+    const role = params[0];
+    const userId = toId(params[1]);
+    const user = state.users.find((item) => item.id === userId);
+    if (user) {
+      user.role = role;
+      persist();
+      return {
+        rows: [
+          {
+            id: user.id,
+            username: user.username,
+            role: user.role,
+            shopId: user.shop_id || null,
+          },
+        ],
+      };
     }
     return { rows: [] };
   });

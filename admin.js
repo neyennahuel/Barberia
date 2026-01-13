@@ -13,6 +13,9 @@ const adminUserShop = document.getElementById("admin-user-shop");
 const adminConvertForm = document.getElementById("admin-convert-form");
 const adminConvertUsername = document.getElementById("admin-convert-username");
 const adminConvertShop = document.getElementById("admin-convert-shop");
+const adminOwnerRoleForm = document.getElementById("admin-owner-role-form");
+const adminOwnerUsername = document.getElementById("admin-owner-username");
+const adminOwnerRole = document.getElementById("admin-owner-role");
 const adminLogoForm = document.getElementById("admin-logo-form");
 const adminLogoShop = document.getElementById("admin-logo-shop");
 const adminLogoInput = document.getElementById("admin-logo-input");
@@ -131,6 +134,34 @@ adminConvertForm.addEventListener("submit", async (event) => {
     showMessage(adminMessage, error.message);
   }
 });
+
+if (adminOwnerRoleForm) {
+  adminOwnerRoleForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    adminMessage.textContent = "";
+
+    try {
+      if (!adminOwnerUsername.value.trim()) {
+        showMessage(adminMessage, "Completa el usuario.");
+        return;
+      }
+      await fetchJSON("/api/users/owner-role", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          actorId: currentUser.id,
+          username: adminOwnerUsername.value.trim(),
+          role: adminOwnerRole.value,
+        }),
+      });
+
+      adminOwnerRoleForm.reset();
+      showMessage(adminMessage, "Rol actualizado.");
+    } catch (error) {
+      showMessage(adminMessage, error.message);
+    }
+  });
+}
 
 adminLogoForm.addEventListener("submit", async (event) => {
   event.preventDefault();

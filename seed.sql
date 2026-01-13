@@ -1,9 +1,16 @@
-INSERT INTO shops (name, address)
-VALUES ('Distrito 17', 'Av. Central 1240');
+INSERT INTO shops (name, address, latitude, longitude, location_url)
+VALUES (
+  'Distrito 17',
+  'Av. Central 1240',
+  -32.8896,
+  -68.8443,
+  'https://www.google.com/maps/@-32.8896,-68.8443,17z'
+);
 
 INSERT INTO users (username, password, name, role, shop_id) VALUES
 ('admin', 'admin123', 'Administrador', 'admin', NULL),
-('dueno', 'dueno123', 'Duenio', 'dueno', 1),
+('duenovip', 'dueno123', 'Duenio VIP', 'duenovip', 1),
+('dueno', 'dueno123', 'Duenio Gratis', 'dueno', 1),
 ('peluquero', 'pelu123', 'Lautaro', 'peluquero', 1),
 ('cliente', 'cliente123', 'Camila', 'cliente', NULL);
 

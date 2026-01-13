@@ -66,6 +66,7 @@
                     <option value="cliente">Cliente</option>
                     <option value="peluquero">Peluquero</option>
                     <option value="dueno">Dueno</option>
+                    <option value="duenovip">Dueno VIP</option>
                     <option value="admin">Admin</option>
                   </select>
                 </label>
@@ -88,6 +89,23 @@
                   <select id="admin-convert-shop"></select>
                 </label>
                 <button class="ghost full" type="submit">Convertir</button>
+              </form>
+            </div>
+            <div class="panel-card">
+              <form id="admin-owner-role-form" class="form-grid">
+                <p class="muted">Ascender o degradar dueno</p>
+                <label>
+                  Usuario dueno
+                  <input id="admin-owner-username" type="text" placeholder="Ej: dueno" />
+                </label>
+                <label>
+                  Nuevo rol
+                  <select id="admin-owner-role">
+                    <option value="dueno">Dueno</option>
+                    <option value="duenovip">Dueno VIP</option>
+                  </select>
+                </label>
+                <button class="ghost full" type="submit">Actualizar rol</button>
               </form>
             </div>
             <div class="panel-card">

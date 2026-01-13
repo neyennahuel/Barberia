@@ -7,7 +7,7 @@ const heroLogin = document.getElementById("hero-login");
 const heroLogout = document.getElementById("hero-logout");
 
 const existingUser = loadUser();
-if (existingUser) {
+if (existingUser && sessionPill) {
   sessionPill.textContent = `${existingUser.name} | ${existingUser.role}`;
 }
 
@@ -30,6 +30,7 @@ loginForm.addEventListener("submit", async (event) => {
       cliente: "cliente.html",
       peluquero: "peluquero.html",
       dueno: "dueno.html",
+      duenovip: "dueno.html",
       admin: "admin.html",
     }[user.role];
     window.location.href = next || "index.html";
@@ -38,11 +39,15 @@ loginForm.addEventListener("submit", async (event) => {
   }
 });
 
-heroLogin.addEventListener("click", () => {
-  loginUser.focus();
-});
+if (heroLogin) {
+  heroLogin.addEventListener("click", () => {
+    loginUser.focus();
+  });
+}
 
-heroLogout.addEventListener("click", () => {
-  saveUser(null);
-  sessionPill.textContent = "Sin sesion";
-});
+if (heroLogout) {
+  heroLogout.addEventListener("click", () => {
+    saveUser(null);
+    if (sessionPill) sessionPill.textContent = "Sin sesion";
+  });
+}

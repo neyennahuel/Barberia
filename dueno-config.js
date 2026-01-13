@@ -1,8 +1,8 @@
-const currentUser = requireRole(["dueno"]);
+const currentUser = requireRole(["dueno", "duenovip"]);
 setupSessionBadge();
 
 const shopName = document.getElementById("shop-name");
-const shopAddress = document.getElementById("shop-address");
+const shopLocationUrl = document.getElementById("shop-location-url");
 const shopDescription = document.getElementById("shop-description");
 const shopDetailsForm = document.getElementById("shop-details-form");
 const shopImagesForm = document.getElementById("shop-images-form");
@@ -24,7 +24,7 @@ async function loadShop() {
       `/api/shops/${currentUser.shopId}?actorId=${currentUser.id}`
     );
     shopName.value = shop.name || "";
-    shopAddress.value = shop.address || "";
+    shopLocationUrl.value = shop.locationUrl || "";
     shopDescription.value = shop.description || "";
     setPreview(shopImage1Preview, shop.imageUrl1);
     setPreview(shopImage2Preview, shop.imageUrl2);
@@ -41,8 +41,8 @@ shopDetailsForm.addEventListener("submit", async (event) => {
     showMessage(shopConfigMessage, "El nombre es obligatorio.");
     return;
   }
-  if (!shopAddress.value.trim()) {
-    showMessage(shopConfigMessage, "La direccion es obligatoria.");
+  if (!shopLocationUrl.value.trim()) {
+    showMessage(shopConfigMessage, "La ubicacion es obligatoria.");
     return;
   }
 
@@ -53,8 +53,8 @@ shopDetailsForm.addEventListener("submit", async (event) => {
       body: JSON.stringify({
         actorId: currentUser.id,
         name: shopName.value.trim(),
-        address: shopAddress.value.trim(),
         description: shopDescription.value.trim(),
+        locationUrl: shopLocationUrl.value.trim(),
       }),
     });
     showMessage(shopConfigMessage, "Datos guardados.");

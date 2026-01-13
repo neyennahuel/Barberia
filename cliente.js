@@ -14,10 +14,14 @@ const clientAppointments = document.getElementById("client-appointments");
 const clientMessage = document.getElementById("client-message");
 const shopList = document.getElementById("shop-list");
 const shopSearch = document.getElementById("shop-search");
+const nearbyButton = document.getElementById("nearby-btn");
+const nearbyMessage = document.getElementById("nearby-message");
 
 let cachedShops = [];
 let selectedSlot = "";
 let favoriteShopIds = new Set();
+let nearbyMode = false;
+let userLocation = null;
 
 function loadFavorites() {
   try {
@@ -43,6 +47,33 @@ function sortByFavorites(shops) {
       if (aFav !== bFav) return aFav ? -1 : 1;
       return a.name.localeCompare(b.name);
     });
+}
+
+function toRadians(value) {
+  return (Number(value) * Math.PI) / 180;
+}
+
+function getDistanceKm(lat1, lon1, lat2, lon2) {
+  const r = 6371;
+  const dLat = toRadians(lat2 - lat1);
+  const dLon = toRadians(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRadians(lat1)) *
+      Math.cos(toRadians(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return r * c;
+}
+
+function getShopDistance(shop, location) {
+  const lat = Number(shop.latitude);
+  const lon = Number(shop.longitude);
+  if (!location || Number.isNaN(lat) || Number.isNaN(lon)) {
+    return null;
+  }
+  return getDistanceKm(location.lat, location.lon, lat, lon);
 }
 
 function createLogoData(name) {
@@ -81,6 +112,26 @@ function getFilteredShops() {
   });
 }
 
+function getDisplayedShops() {
+  const shops = getFilteredShops();
+  if (nearbyMode && userLocation) {
+    return shops
+      .map((shop) => ({
+        ...shop,
+        distanceKm: getShopDistance(shop, userLocation),
+      }))
+      .filter((shop) => shop.distanceKm !== null)
+      .sort((a, b) => a.distanceKm - b.distanceKm);
+  }
+  return sortByFavorites(shops);
+}
+
+function formatDistance(distanceKm) {
+  if (distanceKm === null || distanceKm === undefined) return "";
+  const rounded = distanceKm < 1 ? distanceKm.toFixed(2) : distanceKm.toFixed(1);
+  return `${rounded} km`;
+}
+
 function formatPrice(price) {
   if (price === null || price === undefined) return "";
   const value = Number(price);
@@ -90,11 +141,13 @@ function formatPrice(price) {
 
 function renderShopCards() {
   shopList.innerHTML = "";
-  const filtered = sortByFavorites(getFilteredShops());
+  const filtered = getDisplayedShops();
   if (!filtered.length) {
     const empty = document.createElement("p");
     empty.className = "muted";
-    empty.textContent = "No se encontraron barberias.";
+    empty.textContent = nearbyMode
+      ? "No se encontraron barberias cercanas."
+      : "No se encontraron barberias.";
     shopList.appendChild(empty);
     return;
   }
@@ -102,6 +155,13 @@ function renderShopCards() {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "shop-card";
+    const distanceLine =
+      nearbyMode && shop.distanceKm !== null
+        ? `<p class="shop-distance">A ${formatDistance(shop.distanceKm)}</p>`
+        : "";
+    const locationLine = shop.location_url
+      ? `<a class="shop-location" href="${shop.location_url}" target="_blank" rel="noopener">Ver ubicacion</a>`
+      : "";
     button.innerHTML = `
       <button class="fav-toggle" type="button" aria-label="Marcar favorito">
         <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -112,6 +172,8 @@ function renderShopCards() {
       <div class="shop-meta">
         <h4>${shop.name}</h4>
         <p>${shop.address}</p>
+        ${distanceLine}
+        ${locationLine}
       </div>
     `;
     const favButton = button.querySelector(".fav-toggle");
@@ -275,6 +337,44 @@ bookingBarber.addEventListener("change", renderSlots);
 bookingDate.addEventListener("change", renderSlots);
 if (shopSearch) {
   shopSearch.addEventListener("input", renderShopCards);
+}
+
+if (nearbyButton) {
+  nearbyButton.addEventListener("click", () => {
+    if (nearbyMode) {
+      nearbyMode = false;
+      userLocation = null;
+      nearbyButton.classList.remove("is-active");
+      if (nearbyMessage) nearbyMessage.textContent = "";
+      renderShopCards();
+      return;
+    }
+
+    if (!navigator.geolocation) {
+      if (nearbyMessage) nearbyMessage.textContent = "Geolocalizacion no disponible.";
+      return;
+    }
+
+    if (nearbyMessage) nearbyMessage.textContent = "Pidiendo ubicacion...";
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        userLocation = {
+          lat: position.coords.latitude,
+          lon: position.coords.longitude,
+        };
+        nearbyMode = true;
+        nearbyButton.classList.add("is-active");
+        if (nearbyMessage) nearbyMessage.textContent = "";
+        renderShopCards();
+      },
+      () => {
+        if (nearbyMessage) {
+          nearbyMessage.textContent = "No se pudo obtener la ubicacion.";
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
+    );
+  });
 }
 
 function openDatePicker() {
