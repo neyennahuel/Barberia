@@ -2,6 +2,7 @@ CREATE TABLE IF NOT EXISTS shops (
   id SERIAL PRIMARY KEY,
   name TEXT NOT NULL,
   address TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending',
   logo_url TEXT,
   latitude NUMERIC(9, 6),
   longitude NUMERIC(9, 6),

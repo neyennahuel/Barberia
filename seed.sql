@@ -1,7 +1,8 @@
-INSERT INTO shops (name, address, latitude, longitude, location_url)
+INSERT INTO shops (name, address, status, latitude, longitude, location_url)
 VALUES (
   'Distrito 17',
   'Av. Central 1240',
+  'approved',
   -32.8896,
   -68.8443,
   'https://www.google.com/maps/@-32.8896,-68.8443,17z'

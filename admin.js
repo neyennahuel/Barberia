@@ -13,14 +13,19 @@ const adminUserShop = document.getElementById("admin-user-shop");
 const adminConvertForm = document.getElementById("admin-convert-form");
 const adminConvertUsername = document.getElementById("admin-convert-username");
 const adminConvertShop = document.getElementById("admin-convert-shop");
-const adminOwnerRoleForm = document.getElementById("admin-owner-role-form");
-const adminOwnerUsername = document.getElementById("admin-owner-username");
-const adminOwnerRole = document.getElementById("admin-owner-role");
+const adminOwnerUpgradeForm = document.getElementById("admin-owner-upgrade-form");
+const adminOwnerUpgrade = document.getElementById("admin-owner-upgrade");
+const adminOwnerDowngradeForm = document.getElementById("admin-owner-downgrade-form");
+const adminOwnerDowngrade = document.getElementById("admin-owner-downgrade");
 const adminLogoForm = document.getElementById("admin-logo-form");
 const adminLogoShop = document.getElementById("admin-logo-shop");
 const adminLogoInput = document.getElementById("admin-logo-input");
 const adminLogoPreview = document.getElementById("admin-logo-preview");
 const adminLogoZoom = document.getElementById("admin-logo-zoom");
+const adminDeleteShopForm = document.getElementById("admin-delete-shop-form");
+const adminDeleteShop = document.getElementById("admin-delete-shop");
+const adminPendingList = document.getElementById("admin-pending-list");
+const adminPendingMessage = document.getElementById("admin-pending-message");
 const adminStats = document.getElementById("admin-stats");
 const adminMessage = document.getElementById("admin-message");
 
@@ -33,11 +38,136 @@ const adminCropper = createCropper({
 });
 
 async function loadShops() {
-  cachedShops = await fetchJSON("/api/shops");
+  cachedShops = await fetchJSON(`/api/shops?actorId=${currentUser.id}`);
   const options = cachedShops.map((shop) => ({ label: shop.name, value: shop.id }));
   setOptions(adminUserShop, options, "Selecciona una peluqueria");
   setOptions(adminConvertShop, options, "Selecciona una peluqueria");
   setOptions(adminLogoShop, options, "Selecciona una peluqueria");
+  setOptions(adminDeleteShop, options, "Selecciona una peluqueria");
+}
+
+async function loadOwners() {
+  if (!adminOwnerUpgrade || !adminOwnerDowngrade) return;
+  try {
+    const owners = await fetchJSON(
+      `/api/users/owners?actorId=${currentUser.id}&role=dueno`
+    );
+    const vips = await fetchJSON(
+      `/api/users/owners?actorId=${currentUser.id}&role=duenovip`
+    );
+    setOptions(
+      adminOwnerUpgrade,
+      owners.map((owner) => ({
+        label: `${owner.name} (${owner.username})`,
+        value: owner.username,
+      })),
+      "Selecciona dueno"
+    );
+    setOptions(
+      adminOwnerDowngrade,
+      vips.map((owner) => ({
+        label: `${owner.name} (${owner.username})`,
+        value: owner.username,
+      })),
+      "Selecciona dueno VIP"
+    );
+  } catch (error) {
+    showMessage(adminMessage, error.message);
+  }
+}
+
+async function loadPendingShops() {
+  if (!adminPendingList) return;
+  adminPendingList.innerHTML = "";
+  if (adminPendingMessage) adminPendingMessage.textContent = "";
+
+  try {
+    const rows = await fetchJSON(`/api/shops/pending?actorId=${currentUser.id}`);
+    if (!rows.length) {
+      const empty = document.createElement("p");
+      empty.className = "muted";
+      empty.textContent = "No hay peluquerias pendientes.";
+      adminPendingList.appendChild(empty);
+      return;
+    }
+
+    rows.forEach((shop) => {
+      const item = document.createElement("div");
+      item.className = "pending-item";
+
+      const info = document.createElement("div");
+      info.className = "pending-info";
+
+      const title = document.createElement("p");
+      title.className = "pending-title";
+      title.textContent = shop.name;
+
+      const ownerLabel = shop.ownerName
+        ? `${shop.ownerName} (${shop.ownerRole || "dueno"})`
+        : "Sin dueno";
+      const meta = document.createElement("p");
+      meta.className = "muted";
+      meta.textContent = `${shop.address} | ${ownerLabel}`;
+
+      info.appendChild(title);
+      info.appendChild(meta);
+
+      const actions = document.createElement("div");
+      actions.className = "pending-actions";
+
+      const approveBtn = document.createElement("button");
+      approveBtn.type = "button";
+      approveBtn.className = "cta";
+      approveBtn.textContent = "Aprobar";
+
+      const rejectBtn = document.createElement("button");
+      rejectBtn.type = "button";
+      rejectBtn.className = "danger";
+      rejectBtn.textContent = "Rechazar";
+
+      approveBtn.addEventListener("click", async () => {
+        try {
+          await fetchJSON(`/api/shops/${shop.id}/approve`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ actorId: currentUser.id }),
+          });
+          await loadPendingShops();
+          await loadShops();
+          showMessage(adminPendingMessage, "Peluqueria aprobada.");
+        } catch (error) {
+          showMessage(adminPendingMessage, error.message);
+        }
+      });
+
+      rejectBtn.addEventListener("click", async () => {
+        const confirmed = window.confirm(
+          `Rechazar la peluqueria "${shop.name}"?`
+        );
+        if (!confirmed) return;
+        try {
+          await fetchJSON(`/api/shops/${shop.id}/reject`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ actorId: currentUser.id }),
+          });
+          await loadPendingShops();
+          await loadShops();
+          showMessage(adminPendingMessage, "Peluqueria rechazada.");
+        } catch (error) {
+          showMessage(adminPendingMessage, error.message);
+        }
+      });
+
+      actions.appendChild(approveBtn);
+      actions.appendChild(rejectBtn);
+      item.appendChild(info);
+      item.appendChild(actions);
+      adminPendingList.appendChild(item);
+    });
+  } catch (error) {
+    showMessage(adminPendingMessage, error.message);
+  }
 }
 
 async function loadAdminStats() {
@@ -135,14 +265,14 @@ adminConvertForm.addEventListener("submit", async (event) => {
   }
 });
 
-if (adminOwnerRoleForm) {
-  adminOwnerRoleForm.addEventListener("submit", async (event) => {
+if (adminOwnerUpgradeForm) {
+  adminOwnerUpgradeForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     adminMessage.textContent = "";
 
     try {
-      if (!adminOwnerUsername.value.trim()) {
-        showMessage(adminMessage, "Completa el usuario.");
+      if (!adminOwnerUpgrade.value) {
+        showMessage(adminMessage, "Selecciona un dueno.");
         return;
       }
       await fetchJSON("/api/users/owner-role", {
@@ -150,13 +280,43 @@ if (adminOwnerRoleForm) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           actorId: currentUser.id,
-          username: adminOwnerUsername.value.trim(),
-          role: adminOwnerRole.value,
+          username: adminOwnerUpgrade.value,
+          role: "duenovip",
         }),
       });
 
-      adminOwnerRoleForm.reset();
+      adminOwnerUpgradeForm.reset();
       showMessage(adminMessage, "Rol actualizado.");
+      await loadOwners();
+    } catch (error) {
+      showMessage(adminMessage, error.message);
+    }
+  });
+}
+
+if (adminOwnerDowngradeForm) {
+  adminOwnerDowngradeForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    adminMessage.textContent = "";
+
+    try {
+      if (!adminOwnerDowngrade.value) {
+        showMessage(adminMessage, "Selecciona un dueno VIP.");
+        return;
+      }
+      await fetchJSON("/api/users/owner-role", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          actorId: currentUser.id,
+          username: adminOwnerDowngrade.value,
+          role: "dueno",
+        }),
+      });
+
+      adminOwnerDowngradeForm.reset();
+      showMessage(adminMessage, "Rol actualizado.");
+      await loadOwners();
     } catch (error) {
       showMessage(adminMessage, error.message);
     }
@@ -197,7 +357,39 @@ adminLogoForm.addEventListener("submit", async (event) => {
   }
 });
 
+if (adminDeleteShopForm) {
+  adminDeleteShopForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    adminMessage.textContent = "";
+
+    if (!adminDeleteShop.value) {
+      showMessage(adminMessage, "Selecciona una peluqueria.");
+      return;
+    }
+
+    const targetName = adminDeleteShop.options[adminDeleteShop.selectedIndex]?.text;
+    const confirmed = window.confirm(
+      `Eliminar la peluqueria "${targetName}"? Esta accion no se puede deshacer.`
+    );
+    if (!confirmed) return;
+
+    try {
+      await fetchJSON(`/api/shops/${adminDeleteShop.value}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ actorId: currentUser.id }),
+      });
+      await loadShops();
+      showMessage(adminMessage, "Peluqueria eliminada.");
+    } catch (error) {
+      showMessage(adminMessage, error.message);
+    }
+  });
+}
+
 loadShops().catch(() => {
   adminMessage.textContent = "No se pudo cargar peluquerias.";
 });
 loadAdminStats();
+loadPendingShops();
+loadOwners();

@@ -13,7 +13,7 @@
           <span class="brand-mark">BT</span>
           <div>
             <p class="brand-name">BarberTurno</p>
-            <p class="brand-tag">Crear cuenta</p>
+            <p class="brand-tag">Clientes y peluqueros</p>
           </div>
         </div>
         <nav class="site-nav">
@@ -26,6 +26,10 @@
           <div class="section-head">
             <h2>Sumate a BarberTurno</h2>
             <p>Empeza con un registro rapido o vincula tu cuenta de Google.</p>
+            <p class="muted">
+              Para crear una barberia, usa el formulario de duenos.
+              <a href="crear-barberia.html">Crear barberia</a>
+            </p>
           </div>
           <div class="panel-grid">
             <div class="panel-card">
@@ -37,22 +41,22 @@
               <div class="auth-divider">
                 <span>o crea tu cuenta</span>
               </div>
-              <form class="form-grid">
+              <form id="register-form" class="form-grid">
                 <label>
-                  Nombre
-                  <input type="text" placeholder="Ej: Martina" required />
-                </label>
-                <label>
-                  Email
-                  <input type="email" placeholder="martina@email.com" required />
+                  Usuario
+                  <input id="register-username" type="text" placeholder="Ej: jorge" required />
                 </label>
                 <label>
                   Clave
-                  <input type="password" placeholder="Minimo 6 caracteres" required />
+                  <input id="register-password" type="password" placeholder="Minimo 6 caracteres" required />
                 </label>
                 <button class="cta full" type="submit">Crear cuenta</button>
+                <p id="register-message" class="form-message"></p>
               </form>
-              <p class="muted">Al crear una cuenta aceptas los terminos de uso.</p>
+              <p class="muted">
+                Al crear una cuenta aceptas los terminos de uso. Los peluqueros se
+                crean desde la peluqueria.
+              </p>
             </div>
           </div>
         </section>
@@ -125,5 +129,7 @@
         if (event.key === "Escape") closeLinkModal();
       });
     </script>
+    <script src="shared.js"></script>
+    <script src="crear-cuenta.js"></script>
   </body>
 </html>

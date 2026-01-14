@@ -138,7 +138,8 @@ body {
 }
 
 .cta,
-.ghost {
+.ghost,
+.danger {
   border: none;
   padding: 12px 20px;
   border-radius: 999px;
@@ -159,6 +160,44 @@ body {
   background: transparent;
   border: 1px solid var(--ink);
   color: var(--ink);
+}
+
+.danger {
+  background: #c0392b;
+  color: #fff;
+  border: none;
+}
+
+.pending-list {
+  display: grid;
+  gap: 12px;
+}
+
+.pending-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid #eee;
+  background: #fff;
+}
+
+.pending-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pending-title {
+  font-weight: 600;
+}
+
+.pending-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .hero {

@@ -259,8 +259,8 @@ app.post(
             users.username,
             users.name,
             users.role,
-            users.shop_id as shopId,
-            barbers.id as barberId
+            users.shop_id as \"shopId\",
+            barbers.id as \"barberId\"
      FROM users
      LEFT JOIN barbers ON barbers.user_id = users.id
      WHERE users.username = $1 AND users.password = $2`,
@@ -271,17 +271,78 @@ app.post(
     return res.status(401).json({ error: "Credenciales invalidas." });
   }
 
-    res.json(user);
+  if (isOwnerRole(user.role)) {
+    if (!user.shopId) {
+      return res.status(403).json({ error: "El dueno no tiene peluqueria." });
+    }
+    const shop = await dbGet("SELECT status FROM shops WHERE id = $1", [
+      user.shopId,
+    ]);
+    if (!shop) {
+      return res.status(403).json({ error: "Peluqueria no encontrada." });
+    }
+    if (shop.status !== "approved") {
+      return res
+        .status(403)
+        .json({ error: "Peluqueria pendiente de aprobacion." });
+    }
+  }
+
+  res.json(user);
   })
 );
 
 app.get(
   "/api/shops",
   asyncHandler(async (req, res) => {
-    const shops = await dbAll(
-      "SELECT id, name, address, logo_url, location_url, latitude, longitude FROM shops ORDER BY name"
-    );
+    const { actorId } = req.query;
+    let includeAll = false;
+    if (actorId) {
+      const actor = await dbGet("SELECT role FROM users WHERE id = $1", [actorId]);
+      includeAll = actor?.role === "admin";
+    }
+
+    const shops = includeAll
+      ? await dbAll(
+          "SELECT id, name, address, logo_url, location_url, latitude, longitude, status FROM shops ORDER BY name"
+        )
+      : await dbAll(
+          "SELECT id, name, address, logo_url, location_url, latitude, longitude FROM shops WHERE status = 'approved' ORDER BY name"
+        );
     res.json(shops);
+  })
+);
+
+app.get(
+  "/api/shops/pending",
+  asyncHandler(async (req, res) => {
+    const { actorId } = req.query;
+    if (!actorId) {
+      return res.status(400).json({ error: "Falta actorId." });
+    }
+
+    const actor = await dbGet("SELECT role FROM users WHERE id = $1", [actorId]);
+    if (!actor || actor.role !== "admin") {
+      return res.status(403).json({ error: "Sin permisos." });
+    }
+
+    const rows = await dbAll(
+      `SELECT shops.id,
+              shops.name,
+              shops.address,
+              shops.status,
+              users.name as \"ownerName\",
+              users.username as \"ownerUsername\",
+              users.role as \"ownerRole\"
+       FROM shops
+       LEFT JOIN users
+         ON users.shop_id = shops.id
+        AND users.role IN ('dueno', 'duenovip')
+       WHERE shops.status = 'pending'
+       ORDER BY shops.id DESC`
+    );
+
+    res.json(rows);
   })
 );
 
@@ -295,7 +356,7 @@ app.get(
     }
 
     const actor = await dbGet(
-      "SELECT id, role, shop_id as shopId FROM users WHERE id = $1",
+      "SELECT id, role, shop_id as \"shopId\" FROM users WHERE id = $1",
       [actorId]
     );
     if (!actor) {
@@ -313,10 +374,11 @@ app.get(
               name,
               address,
               description,
-              logo_url as logoUrl,
-              image_url_1 as imageUrl1,
-              image_url_2 as imageUrl2,
-              location_url as locationUrl,
+              status,
+              logo_url as \"logoUrl\",
+              image_url_1 as \"imageUrl1\",
+              image_url_2 as \"imageUrl2\",
+              location_url as \"locationUrl\",
               latitude,
               longitude
        FROM shops
@@ -342,7 +404,7 @@ app.put(
     }
 
     const actor = await dbGet(
-      "SELECT id, role, shop_id as shopId FROM users WHERE id = $1",
+      "SELECT id, role, shop_id as \"shopId\" FROM users WHERE id = $1",
       [actorId]
     );
     if (!actor) {
@@ -356,7 +418,7 @@ app.put(
     }
 
     const current = await dbGet(
-      "SELECT address, location_url as locationUrl FROM shops WHERE id = $1",
+      "SELECT address, location_url as \"locationUrl\" FROM shops WHERE id = $1",
       [shopId]
     );
     const finalAddress = address || current?.address || "";
@@ -413,7 +475,7 @@ app.post(
     }
 
     const actor = await dbGet(
-      "SELECT id, role, shop_id as shopId FROM users WHERE id = $1",
+      "SELECT id, role, shop_id as \"shopId\" FROM users WHERE id = $1",
       [actorId]
     );
 
@@ -441,7 +503,7 @@ app.post(
     }
 
     const current = await dbGet(
-      "SELECT image_url_1 as imageUrl1, image_url_2 as imageUrl2 FROM shops WHERE id = $1",
+      "SELECT image_url_1 as \"imageUrl1\", image_url_2 as \"imageUrl2\" FROM shops WHERE id = $1",
       [targetShopId]
     );
 
@@ -470,7 +532,7 @@ app.post(
     );
 
     const shop = await dbGet(
-      `SELECT image_url_1 as imageUrl1, image_url_2 as imageUrl2
+      `SELECT image_url_1 as \"imageUrl1\", image_url_2 as \"imageUrl2\"
        FROM shops
        WHERE id = $1`,
       [targetShopId]
@@ -494,11 +556,144 @@ app.post(
     }
 
     const result = await dbRun(
-      "INSERT INTO shops (name, address) VALUES ($1, $2) RETURNING id, name, address",
+      "INSERT INTO shops (name, address, status) VALUES ($1, $2, 'approved') RETURNING id, name, address, status",
       [name, address]
     );
 
     res.json(result.rows[0]);
+  })
+);
+
+app.post(
+  "/api/shops/request",
+  asyncHandler(async (req, res) => {
+    const { name, address, ownerName, ownerUsername, ownerPassword } =
+      req.body || {};
+    if (
+      !name ||
+      !address ||
+      !ownerName ||
+      !ownerUsername ||
+      !ownerPassword
+    ) {
+      return res.status(400).json({ error: "Faltan datos." });
+    }
+
+    const existingUser = await dbGet(
+      "SELECT id FROM users WHERE username = $1",
+      [ownerUsername]
+    );
+    if (existingUser) {
+      return res.status(409).json({ error: "El usuario ya existe." });
+    }
+
+    await dbRun("BEGIN");
+    try {
+      const shop = await dbGet(
+        "INSERT INTO shops (name, address, status) VALUES ($1, $2, 'pending') RETURNING id",
+        [name, address]
+      );
+      const user = await dbGet(
+        `INSERT INTO users (username, password, name, role, shop_id)
+         VALUES ($1, $2, $3, $4, $5)
+         RETURNING id`,
+        [ownerUsername, ownerPassword, ownerName, "dueno", shop.id]
+      );
+      await dbRun("COMMIT");
+      res.json({ ok: true, shopId: shop.id, userId: user.id });
+    } catch (error) {
+      await dbRun("ROLLBACK");
+      if (error.code === "23505") {
+        return res.status(409).json({ error: "El usuario ya existe." });
+      }
+      throw error;
+    }
+  })
+);
+
+app.post(
+  "/api/shops/:id/approve",
+  asyncHandler(async (req, res) => {
+    const { actorId } = req.body || {};
+    const shopId = req.params.id;
+    if (!actorId) {
+      return res.status(400).json({ error: "Falta actorId." });
+    }
+
+    const actor = await dbGet("SELECT role FROM users WHERE id = $1", [actorId]);
+    if (!actor || actor.role !== "admin") {
+      return res.status(403).json({ error: "Sin permisos." });
+    }
+
+    const result = await dbRun(
+      "UPDATE shops SET status = 'approved' WHERE id = $1",
+      [shopId]
+    );
+    if (!result.rowCount) {
+      return res.status(404).json({ error: "Peluqueria no encontrada." });
+    }
+
+    res.json({ ok: true });
+  })
+);
+
+app.post(
+  "/api/shops/:id/reject",
+  asyncHandler(async (req, res) => {
+    const { actorId } = req.body || {};
+    const shopId = req.params.id;
+    if (!actorId) {
+      return res.status(400).json({ error: "Falta actorId." });
+    }
+
+    const actor = await dbGet("SELECT role FROM users WHERE id = $1", [actorId]);
+    if (!actor || actor.role !== "admin") {
+      return res.status(403).json({ error: "Sin permisos." });
+    }
+
+    const result = await dbRun(
+      "UPDATE shops SET status = 'rejected' WHERE id = $1",
+      [shopId]
+    );
+    if (!result.rowCount) {
+      return res.status(404).json({ error: "Peluqueria no encontrada." });
+    }
+
+    res.json({ ok: true });
+  })
+);
+
+app.delete(
+  "/api/shops/:id",
+  asyncHandler(async (req, res) => {
+    const { actorId } = req.body || {};
+    const shopId = req.params.id;
+
+    if (!actorId) {
+      return res.status(400).json({ error: "Falta actorId." });
+    }
+
+    const actor = await dbGet("SELECT role FROM users WHERE id = $1", [actorId]);
+    if (!actor || actor.role !== "admin") {
+      return res.status(403).json({ error: "Sin permisos." });
+    }
+
+    const shop = await dbGet("SELECT id FROM shops WHERE id = $1", [shopId]);
+    if (!shop) {
+      return res.status(404).json({ error: "Peluqueria no encontrada." });
+    }
+
+    await dbRun("DELETE FROM appointments WHERE shop_id = $1", [shopId]);
+    await dbRun(
+      "DELETE FROM barber_slots WHERE barber_id IN (SELECT id FROM barbers WHERE shop_id = $1)",
+      [shopId]
+    );
+    await dbRun("DELETE FROM barbers WHERE shop_id = $1", [shopId]);
+    await dbRun("DELETE FROM shop_services WHERE shop_id = $1", [shopId]);
+    await dbRun("UPDATE users SET shop_id = NULL WHERE shop_id = $1", [shopId]);
+    await dbRun("DELETE FROM shops WHERE id = $1", [shopId]);
+
+    res.json({ ok: true });
   })
 );
 
@@ -512,7 +707,7 @@ app.post(
     }
 
     const actor = await dbGet(
-      "SELECT id, role, shop_id as shopId FROM users WHERE id = $1",
+      "SELECT id, role, shop_id as \"shopId\" FROM users WHERE id = $1",
       [actorId]
     );
 
@@ -559,7 +754,7 @@ app.post(
     }
 
     const actor = await dbGet(
-      "SELECT id, role, shop_id as shopId FROM users WHERE id = $1",
+      "SELECT id, role, shop_id as \"shopId\" FROM users WHERE id = $1",
       [actorId]
     );
 
@@ -604,7 +799,7 @@ app.post(
     const createdUser = await dbGet(
       `INSERT INTO users (username, password, name, role, shop_id)
        VALUES ($1, $2, $3, $4, $5)
-       RETURNING id, username, name, role, shop_id as shopId`,
+       RETURNING id, username, name, role, shop_id as \"shopId\"`,
       [username, password, name, role, finalShopId]
     );
 
@@ -626,6 +821,34 @@ app.post(
         [barber.id]
       );
     }
+
+    res.json(createdUser);
+  })
+);
+
+app.post(
+  "/api/users/register",
+  asyncHandler(async (req, res) => {
+    const { username, password, name } = req.body || {};
+    if (!username || !password) {
+      return res.status(400).json({ error: "Faltan datos." });
+    }
+
+    const existingUser = await dbGet(
+      "SELECT id FROM users WHERE username = $1",
+      [username]
+    );
+    if (existingUser) {
+      return res.status(409).json({ error: "El usuario ya existe." });
+    }
+
+    const displayName = name || username;
+    const createdUser = await dbGet(
+      `INSERT INTO users (username, password, name, role, shop_id)
+       VALUES ($1, $2, $3, 'cliente', NULL)
+       RETURNING id, username, name, role`,
+      [username, password, displayName]
+    );
 
     res.json(createdUser);
   })
@@ -660,7 +883,7 @@ app.delete(
     }
 
     const actor = await dbGet(
-      "SELECT id, role, shop_id as shopId FROM users WHERE id = $1",
+      "SELECT id, role, shop_id as \"shopId\" FROM users WHERE id = $1",
       [actorId]
     );
 
@@ -669,7 +892,7 @@ app.delete(
     }
 
     const barber = await dbGet(
-      "SELECT id, shop_id as shopId, user_id as userId FROM barbers WHERE id = $1",
+      "SELECT id, shop_id as \"shopId\", user_id as \"userId\" FROM barbers WHERE id = $1",
       [barberId]
     );
 
@@ -717,7 +940,7 @@ app.get(
     if (!actorId) return res.status(400).json({ error: "Falta actorId" });
 
     const actor = await dbGet(
-      "SELECT id, role, shop_id as shopId FROM users WHERE id = $1",
+      "SELECT id, role, shop_id as \"shopId\" FROM users WHERE id = $1",
       [actorId]
     );
     if (!actor) return res.status(403).json({ error: "Sin permisos." });
@@ -749,7 +972,7 @@ app.post(
     }
 
     const actor = await dbGet(
-      "SELECT id, role, shop_id as shopId FROM users WHERE id = $1",
+      "SELECT id, role, shop_id as \"shopId\" FROM users WHERE id = $1",
       [actorId]
     );
     if (!actor) return res.status(403).json({ error: "Sin permisos." });
@@ -789,13 +1012,13 @@ app.put(
     }
 
     const actor = await dbGet(
-      "SELECT id, role, shop_id as shopId FROM users WHERE id = $1",
+      "SELECT id, role, shop_id as \"shopId\" FROM users WHERE id = $1",
       [actorId]
     );
     if (!actor) return res.status(403).json({ error: "Sin permisos." });
 
     const service = await dbGet(
-      "SELECT id, shop_id as shopId FROM shop_services WHERE id = $1",
+      "SELECT id, shop_id as \"shopId\" FROM shop_services WHERE id = $1",
       [serviceId]
     );
     if (!service) return res.status(404).json({ error: "Servicio no encontrado." });
@@ -828,13 +1051,13 @@ app.delete(
     }
 
     const actor = await dbGet(
-      "SELECT id, role, shop_id as shopId FROM users WHERE id = $1",
+      "SELECT id, role, shop_id as \"shopId\" FROM users WHERE id = $1",
       [actorId]
     );
     if (!actor) return res.status(403).json({ error: "Sin permisos." });
 
     const service = await dbGet(
-      "SELECT id, shop_id as shopId FROM shop_services WHERE id = $1",
+      "SELECT id, shop_id as \"shopId\" FROM shop_services WHERE id = $1",
       [serviceId]
     );
     if (!service) return res.status(404).json({ error: "Servicio no encontrado." });
@@ -972,7 +1195,14 @@ app.get(
     await dbRun("DELETE FROM appointments WHERE date < $1", [today]);
 
     const rows = await dbAll(
-      `SELECT appointments.id,
+      `SELECT DISTINCT ON (
+                appointments.client_id,
+                appointments.shop_id,
+                appointments.barber_id,
+                appointments.date,
+                appointments.time
+              )
+              appointments.id,
               appointments.date,
               appointments.time,
               shops.name as shop,
@@ -982,7 +1212,12 @@ app.get(
        JOIN barbers ON barbers.id = appointments.barber_id
        JOIN users ON users.id = barbers.user_id
        WHERE appointments.client_id = $1
-       ORDER BY appointments.date, appointments.time`,
+       ORDER BY appointments.client_id,
+                appointments.shop_id,
+                appointments.barber_id,
+                appointments.date,
+                appointments.time,
+                appointments.id DESC`,
       [clientId]
     );
 
@@ -1002,8 +1237,8 @@ app.delete(
     const actor = await dbGet(
       `SELECT users.id,
               users.role,
-              users.shop_id as shopId,
-              barbers.id as barberId
+              users.shop_id as \"shopId\",
+              barbers.id as \"barberId\"
        FROM users
        LEFT JOIN barbers ON barbers.user_id = users.id
        WHERE users.id = $1`,
@@ -1080,7 +1315,7 @@ app.get(
     }
 
     const actor = await dbGet(
-      "SELECT id, role, shop_id as shopId FROM users WHERE id = $1",
+      "SELECT id, role, shop_id as \"shopId\" FROM users WHERE id = $1",
       [actorId]
     );
     if (!actor) {
@@ -1107,11 +1342,15 @@ app.get(
       `SELECT appointments.id,
               appointments.date,
               appointments.service,
-              appointments.service_price as servicePrice,
-              appointments.client_id as clientId,
-              users.name as clientName
+              appointments.service_price as \"servicePrice\",
+              appointments.client_id as \"clientId\",
+              users.name as \"clientName\",
+              appointments.barber_id as \"barberId\",
+              barber_users.name as \"barberName\"
        FROM appointments
        JOIN users ON users.id = appointments.client_id
+       JOIN barbers ON barbers.id = appointments.barber_id
+       JOIN users barber_users ON barber_users.id = barbers.user_id
        WHERE appointments.shop_id = $1
          AND appointments.date >= $2
          AND appointments.date <= $3
@@ -1130,6 +1369,7 @@ app.get(
     let revenue = 0;
     const sales = appointments.length;
     const perClient = new Map();
+    const perBarber = new Map();
     const perDay = new Map();
 
     appointments.forEach((item) => {
@@ -1146,6 +1386,16 @@ app.get(
       };
       current.total += price;
       perClient.set(clientKey, current);
+      const barberKey = String(item.barberId);
+      const currentBarber = perBarber.get(barberKey) || {
+        id: item.barberId,
+        name: item.barberName,
+        total: 0,
+        sales: 0,
+      };
+      currentBarber.total += price;
+      currentBarber.sales += 1;
+      perBarber.set(barberKey, currentBarber);
       const dayKey = item.date;
       const dayData = perDay.get(dayKey) || { total: 0, count: 0 };
       dayData.total += price;
@@ -1158,6 +1408,16 @@ app.get(
     perClient.forEach((value) => {
       if (!topClient || value.total > topClient.total) {
         topClient = value;
+      }
+    });
+    let topBarber = null;
+    perBarber.forEach((value) => {
+      if (
+        !topBarber ||
+        value.sales > topBarber.sales ||
+        (value.sales === topBarber.sales && value.total > topBarber.total)
+      ) {
+        topBarber = value;
       }
     });
 
@@ -1185,6 +1445,14 @@ app.get(
       topClient: topClient
         ? { id: topClient.id, name: topClient.name, total: topClient.total }
         : null,
+      topBarber: topBarber
+        ? {
+            id: topBarber.id,
+            name: topBarber.name,
+            total: topBarber.total,
+            sales: topBarber.sales,
+          }
+        : null,
       salesByDay: days,
     });
   })
@@ -1199,7 +1467,7 @@ app.post(
     }
 
     const actor = await dbGet(
-      "SELECT id, role, shop_id as shopId FROM users WHERE id = $1",
+      "SELECT id, role, shop_id as \"shopId\" FROM users WHERE id = $1",
       [actorId]
     );
 
@@ -1285,11 +1553,34 @@ app.post(
     }
 
     const updated = await dbGet(
-      "UPDATE users SET role = $1 WHERE id = $2 RETURNING id, username, role, shop_id as shopId",
+      "UPDATE users SET role = $1 WHERE id = $2 RETURNING id, username, role, shop_id as \"shopId\"",
       [role, target.id]
     );
 
     res.json(updated);
+  })
+);
+
+app.get(
+  "/api/users/owners",
+  asyncHandler(async (req, res) => {
+    const { actorId, role } = req.query;
+    if (!actorId) {
+      return res.status(400).json({ error: "Falta actorId." });
+    }
+
+    const actor = await dbGet("SELECT role FROM users WHERE id = $1", [actorId]);
+    if (!actor || actor.role !== "admin") {
+      return res.status(403).json({ error: "Sin permisos." });
+    }
+
+    const targetRole = role === "duenovip" ? "duenovip" : "dueno";
+    const rows = await dbAll(
+      "SELECT id, username, name, role FROM users WHERE role = $1 ORDER BY username",
+      [targetRole]
+    );
+
+    res.json(rows);
   })
 );
 
@@ -1359,7 +1650,7 @@ app.get(
     }
 
     let user = await dbGet(
-      "SELECT id, username, name, role, shop_id as shopId FROM users WHERE username = $1",
+      "SELECT id, username, name, role, shop_id as \"shopId\" FROM users WHERE username = $1",
       [email]
     );
 
@@ -1367,7 +1658,7 @@ app.get(
       const created = await dbGet(
         `INSERT INTO users (username, password, name, role, shop_id)
          VALUES ($1, $2, $3, $4, $5)
-         RETURNING id, username, name, role, shop_id as shopId`,
+         RETURNING id, username, name, role, shop_id as \"shopId\"`,
         [email, "oauth-google", name, "cliente", null]
       );
       user = created;
@@ -1391,5 +1682,11 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`Servidor listo en http://localhost:${PORT}`);
 });
+
+
+
+
+
+
 
 

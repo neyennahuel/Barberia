@@ -37,6 +37,10 @@
                   <input id="shop-name" type="text" required />
                 </label>
                 <label>
+                  Direccion
+                  <input id="shop-address" type="text" required />
+                </label>
+                <label>
                   Ubicacion (Google Maps)
                   <input
                     id="shop-location-url"
@@ -72,6 +76,17 @@
                   </div>
                 </div>
                 <button class="ghost full" type="submit">Guardar imagenes</button>
+              </form>
+            </div>
+            <div class="panel-card">
+              <form id="shop-logo-form" class="form-grid">
+                <p class="muted">Logo de la barberia</p>
+                <img id="shop-logo-preview" class="logo-preview is-hidden" alt="Logo" />
+                <label class="ghost">
+                  Cargar logo
+                  <input id="shop-logo-input" type="file" accept="image/*" />
+                </label>
+                <button class="ghost full" type="submit">Guardar logo</button>
               </form>
             </div>
           </div>

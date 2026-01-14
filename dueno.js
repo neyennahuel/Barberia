@@ -14,18 +14,14 @@ const ownerRemoveForm = document.getElementById("owner-remove-form");
 const ownerRemoveBarber = document.getElementById("owner-remove-barber");
 const ownerConvertForm = document.getElementById("owner-convert-form");
 const ownerConvertUsername = document.getElementById("owner-convert-username");
-const ownerLogoForm = document.getElementById("owner-logo-form");
-const ownerLogoInput = document.getElementById("owner-logo-input");
-const ownerLogoPreview = document.getElementById("owner-logo-preview");
-const ownerLogoThumb = document.getElementById("owner-logo-thumb");
-const ownerLogoEdit = document.getElementById("owner-logo-edit");
-const ownerLogoZoom = document.getElementById("owner-logo-zoom");
 const ownerManageMessage = document.getElementById("owner-manage-message");
 const ownerRevenue = document.getElementById("owner-revenue");
 const ownerSales = document.getElementById("owner-sales");
 const ownerAvgTicket = document.getElementById("owner-avg-ticket");
 const ownerTopClient = document.getElementById("owner-top-client");
 const ownerTopTotal = document.getElementById("owner-top-total");
+const ownerTopBarber = document.getElementById("owner-top-barber");
+const ownerTopBarberTotal = document.getElementById("owner-top-barber-total");
 const ownerSalesChart = document.getElementById("owner-sales-chart");
 const ownerStatsPeriod = document.getElementById("owner-stats-period");
 const statsFilter = document.getElementById("owner-stats-filter");
@@ -42,10 +38,6 @@ const confirmModal = document.getElementById("confirm-modal");
 const confirmMessage = document.getElementById("confirm-message");
 const confirmCancel = document.getElementById("confirm-cancel");
 const confirmAccept = document.getElementById("confirm-accept");
-const logoModal = document.getElementById("logo-modal");
-const logoClose = document.getElementById("logo-close");
-const logoCancel = document.getElementById("logo-cancel");
-const logoApply = document.getElementById("logo-apply");
 const ownerRoleTag = document.getElementById("owner-role-tag");
 const vipOnlyBlocks = document.querySelectorAll(".vip-only");
 const isVipOwner = currentUser.role === "duenovip";
@@ -58,40 +50,6 @@ if (!isVipOwner && vipOnlyBlocks.length) {
   vipOnlyBlocks.forEach((element) => element.classList.add("is-hidden"));
 }
 
-const ownerCropper = createCropper({
-  input: ownerLogoInput,
-  canvas: ownerLogoPreview,
-  zoom: ownerLogoZoom,
-  message: ownerManageMessage,
-});
-
-function openLogoModal() {
-  if (!logoModal) return;
-  logoModal.classList.remove("is-hidden");
-  logoModal.setAttribute("aria-hidden", "false");
-  logoApply?.focus();
-}
-
-function closeLogoModal() {
-  if (!logoModal) return;
-  logoModal.classList.add("is-hidden");
-  logoModal.setAttribute("aria-hidden", "true");
-}
-
-async function syncThumbPreview() {
-  if (!ownerLogoThumb) return;
-  const blob = await ownerCropper.getBlob(240);
-  if (!blob) return;
-  const url = URL.createObjectURL(blob);
-  const img = new Image();
-  img.onload = () => {
-    const ctx = ownerLogoThumb.getContext("2d");
-    ctx.clearRect(0, 0, ownerLogoThumb.width, ownerLogoThumb.height);
-    ctx.drawImage(img, 0, 0, ownerLogoThumb.width, ownerLogoThumb.height);
-    URL.revokeObjectURL(url);
-  };
-  img.src = url;
-}
 
 function confirmAction(message) {
   if (!confirmModal || !confirmMessage || !confirmCancel || !confirmAccept) {
@@ -124,9 +82,10 @@ function confirmAction(message) {
 
 async function loadOwnerShopName() {
   try {
-    const shops = await fetchJSON("/api/shops");
-    const shop = shops.find((item) => item.id === currentUser.shopId);
-    ownerUserShop.value = shop ? shop.name : "";
+    const shop = await fetchJSON(
+      `/api/shops/${currentUser.shopId}?actorId=${currentUser.id}`
+    );
+    ownerUserShop.value = shop?.name || "";
   } catch (error) {
     ownerUserShop.value = "";
   }
@@ -330,6 +289,15 @@ async function loadOwnerStats() {
       ownerTopClient.textContent = "Sin datos";
       ownerTopTotal.textContent = "";
     }
+    if (ownerTopBarber) {
+      if (stats.topBarber) {
+        ownerTopBarber.textContent = stats.topBarber.name;
+        ownerTopBarberTotal.textContent = `${stats.topBarber.sales} ventas`;
+      } else {
+        ownerTopBarber.textContent = "Sin datos";
+        ownerTopBarberTotal.textContent = "";
+      }
+    }
     if (ownerStatsPeriod) {
       ownerStatsPeriod.textContent = formatMonthLabel(stats.period.month);
     }
@@ -340,6 +308,10 @@ async function loadOwnerStats() {
     ownerAvgTicket.textContent = "-";
     ownerTopClient.textContent = "Sin datos";
     if (ownerStatsPeriod) ownerStatsPeriod.textContent = "";
+    if (ownerTopBarber) {
+      ownerTopBarber.textContent = "Sin datos";
+      ownerTopBarberTotal.textContent = "";
+    }
   }
 }
 
@@ -449,60 +421,6 @@ ownerConvertForm.addEventListener("submit", async (event) => {
   }
 });
 
-ownerLogoForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  ownerManageMessage.textContent = "";
-
-  const blob = await ownerCropper.getBlob(400);
-  if (!blob) {
-    showMessage(ownerManageMessage, "Selecciona una imagen.");
-    return;
-  }
-
-  const formData = new FormData();
-  formData.append("actorId", currentUser.id);
-  formData.append("logo", blob, "logo.png");
-
-  try {
-    const response = await fetch(`${API}/api/shops/logo`, {
-      method: "POST",
-      body: formData,
-    });
-    if (!response.ok) {
-      throw new Error("Error al subir");
-    }
-    ownerLogoInput.value = "";
-    showMessage(ownerManageMessage, "Logo actualizado.");
-  } catch (error) {
-    showMessage(ownerManageMessage, "No se pudo subir el logo.");
-  }
-});
-
-if (ownerLogoInput) {
-  ownerLogoInput.addEventListener("change", () => {
-    if (ownerLogoEdit) ownerLogoEdit.disabled = !ownerLogoInput.value;
-    openLogoModal();
-  });
-}
-
-if (ownerLogoEdit) {
-  ownerLogoEdit.addEventListener("click", openLogoModal);
-}
-
-if (logoCancel) {
-  logoCancel.addEventListener("click", closeLogoModal);
-}
-
-if (logoClose) {
-  logoClose.addEventListener("click", closeLogoModal);
-}
-
-if (logoApply) {
-  logoApply.addEventListener("click", async () => {
-    await syncThumbPreview();
-    closeLogoModal();
-  });
-}
 
 if (ownerServiceForm) {
   ownerServiceForm.addEventListener("submit", async (event) => {
@@ -536,19 +454,6 @@ if (ownerServiceForm) {
   });
 }
 
-if (logoModal) {
-  logoModal.addEventListener("click", (event) => {
-    if (event.target === logoModal) {
-      closeLogoModal();
-    }
-  });
-}
-
-window.addEventListener("keydown", (event) => {
-  if (event.key === "Escape" && logoModal && !logoModal.classList.contains("is-hidden")) {
-    closeLogoModal();
-  }
-});
 
 ownerBarber.addEventListener("change", async () => {
   await refreshAgenda();

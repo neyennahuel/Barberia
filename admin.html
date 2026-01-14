@@ -46,6 +46,13 @@
               </form>
             </div>
             <div class="panel-card">
+              <div class="form-grid">
+                <p class="muted">Aprobacion de peluquerias</p>
+                <div id="admin-pending-list" class="pending-list"></div>
+                <p id="admin-pending-message" class="form-message"></p>
+              </div>
+            </div>
+            <div class="panel-card">
               <form id="admin-user-form" class="form-grid">
                 <p class="muted">Crear usuario</p>
                 <label>
@@ -92,18 +99,21 @@
               </form>
             </div>
             <div class="panel-card">
-              <form id="admin-owner-role-form" class="form-grid">
-                <p class="muted">Ascender o degradar dueno</p>
+              <form id="admin-owner-upgrade-form" class="form-grid">
+                <p class="muted">Subir a Dueno VIP</p>
                 <label>
-                  Usuario dueno
-                  <input id="admin-owner-username" type="text" placeholder="Ej: dueno" />
+                  Dueno
+                  <select id="admin-owner-upgrade"></select>
                 </label>
+                <button class="ghost full" type="submit">Actualizar rol</button>
+              </form>
+            </div>
+            <div class="panel-card">
+              <form id="admin-owner-downgrade-form" class="form-grid">
+                <p class="muted">Bajar a Dueno</p>
                 <label>
-                  Nuevo rol
-                  <select id="admin-owner-role">
-                    <option value="dueno">Dueno</option>
-                    <option value="duenovip">Dueno VIP</option>
-                  </select>
+                  Dueno VIP
+                  <select id="admin-owner-downgrade"></select>
                 </label>
                 <button class="ghost full" type="submit">Actualizar rol</button>
               </form>
@@ -136,6 +146,19 @@
                   />
                 </div>
                 <button class="ghost full" type="submit">Guardar logo</button>
+              </form>
+            </div>
+            <div class="panel-card">
+              <form id="admin-delete-shop-form" class="form-grid">
+                <p class="muted">Eliminar peluqueria</p>
+                <label>
+                  Peluqueria
+                  <select id="admin-delete-shop"></select>
+                </label>
+                <p class="muted">
+                  Esta accion borra turnos, servicios y peluqueros asociados.
+                </p>
+                <button class="danger full" type="submit">Eliminar peluqueria</button>
               </form>
             </div>
           </div>

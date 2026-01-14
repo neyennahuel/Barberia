@@ -307,7 +307,10 @@ async function refreshBooking() {
   await renderSlots();
 }
 
+let appointmentsRequestId = 0;
+
 async function loadClientAppointments() {
+  const requestId = ++appointmentsRequestId;
   clientAppointments.innerHTML = "";
   clientMessage.textContent = "";
 
@@ -315,19 +318,27 @@ async function loadClientAppointments() {
     const rows = await fetchJSON(
       `/api/appointments/client?clientId=${currentUser.id}`
     );
-    if (!rows.length) {
+    if (requestId !== appointmentsRequestId) return;
+    const unique = new Map();
+    rows.forEach((row) => {
+      const key = `${row.date}|${row.time}|${row.shop}|${row.barber}`;
+      if (!unique.has(key)) unique.set(key, row);
+    });
+    const deduped = Array.from(unique.values());
+    if (!deduped.length) {
       const li = document.createElement("li");
       li.textContent = "No tenes turnos agendados.";
       clientAppointments.appendChild(li);
       return;
     }
 
-    rows.forEach((row) => {
+    deduped.forEach((row) => {
       const li = document.createElement("li");
       li.textContent = `${row.date} ${row.time} | ${row.shop} | ${row.barber}`;
       clientAppointments.appendChild(li);
     });
   } catch (error) {
+    if (requestId !== appointmentsRequestId) return;
     clientMessage.textContent = error.message;
   }
 }
@@ -430,6 +441,8 @@ const today = getTodayISO();
 bookingDate.min = today;
 bookingDate.value = today;
 
+let clientDataLoaded = false;
+
 function refreshClientData() {
   loadShops().catch(() => {
     bookingMessage.textContent = "No se pudo conectar con el servidor.";
@@ -437,8 +450,12 @@ function refreshClientData() {
   loadClientAppointments();
 }
 
-window.addEventListener("pageshow", () => {
-  refreshClientData();
+window.addEventListener("pageshow", (event) => {
+  if (event.persisted && !clientDataLoaded) {
+    refreshClientData();
+    clientDataLoaded = true;
+  }
 });
 
 refreshClientData();
+clientDataLoaded = true;
